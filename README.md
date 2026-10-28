@@ -98,7 +98,7 @@ En Macs con Apple Silicon el contenedor corre emulado y la primera ejecución ta
 Prueba de concurrencia contra una instancia en marcha:
 
 ```bash
-ADMIN_PASSWORD='Juan2118.' ./scripts/prueba-concurrencia.sh
+ADMIN_PASSWORD='<DEMO_PASSWORD>' ./scripts/prueba-concurrencia.sh
 ```
 
 ## API
