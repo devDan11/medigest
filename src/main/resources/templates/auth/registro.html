@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registro de paciente · MediGest</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/medigest.css}">
+</head>
+<body class="mg-auth py-4">
+<main class="container" style="max-width: 640px;">
+    <div class="text-center mb-4"><h1 class="h2 mg-marca">MediGest</h1></div>
+    <div class="card mg-tarjeta">
+        <div class="card-body p-4">
+            <h2 class="h5 mb-3">Crear cuenta de paciente</h2>
+            <form th:action="@{/registro}" th:object="${form}" method="post" novalidate>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="nombres" class="form-label">Nombres</label>
+                        <input type="text" class="form-control" id="nombres" th:field="*{nombres}" maxlength="100"
+                               th:classappend="${#fields.hasErrors('nombres')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{nombres}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="apellidos" class="form-label">Apellidos</label>
+                        <input type="text" class="form-control" id="apellidos" th:field="*{apellidos}" maxlength="100"
+                               th:classappend="${#fields.hasErrors('apellidos')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{apellidos}"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="tipoDocumento" class="form-label">Documento</label>
+                        <select class="form-select" id="tipoDocumento" th:field="*{tipoDocumento}">
+                            <option th:each="t : ${tiposDocumento}" th:value="${t}" th:text="${t}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label for="numeroDocumento" class="form-label">Número de documento</label>
+                        <input type="text" class="form-control" id="numeroDocumento" th:field="*{numeroDocumento}"
+                               maxlength="20" th:classappend="${#fields.hasErrors('numeroDocumento')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{numeroDocumento}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="fechaNacimiento" class="form-label">Fecha de nacimiento</label>
+                        <input type="date" class="form-control" id="fechaNacimiento" th:field="*{fechaNacimiento}"
+                               th:classappend="${#fields.hasErrors('fechaNacimiento')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{fechaNacimiento}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="sexo" class="form-label">Sexo (opcional)</label>
+                        <select class="form-select" id="sexo" th:field="*{sexo}">
+                            <option value="">No indicar</option>
+                            <option th:each="s : ${sexos}" th:value="${s}"
+                                    th:text="${s.name() == 'M' ? 'Masculino' : (s.name() == 'F' ? 'Femenino' : 'Otro')}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-7">
+                        <label for="email" class="form-label">Correo electrónico</label>
+                        <input type="email" class="form-control" id="email" th:field="*{email}" maxlength="150"
+                               autocomplete="username" th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{email}"></div>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="telefono" class="form-label">Teléfono (opcional)</label>
+                        <input type="tel" class="form-control" id="telefono" th:field="*{telefono}" maxlength="20"
+                               th:classappend="${#fields.hasErrors('telefono')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{telefono}"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="password" th:field="*{password}" maxlength="72"
+                               autocomplete="new-password" th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{password}"></div>
+                        <div class="form-text">8 a 72 caracteres, con letras y números.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="confirmacion" class="form-label">Repita la contraseña</label>
+                        <input type="password" class="form-control" id="confirmacion" th:field="*{confirmacion}"
+                               maxlength="72" autocomplete="new-password"
+                               th:classappend="${#fields.hasErrors('confirmacion')} ? 'is-invalid'">
+                        <div class="invalid-feedback" th:errors="*{confirmacion}"></div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-4">Crear cuenta</button>
+            </form>
+            <div class="mt-3 small">¿Ya tiene cuenta? <a th:href="@{/login}">Inicie sesión</a></div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

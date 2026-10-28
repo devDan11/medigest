@@ -1,0 +1,25 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  thymeleaf:
+    cache: false
+
+logging:
+  level:
+    com.medigestsystem: DEBUG
+    org.flywaydb: INFO
+  file:
+    name: logs/medigest.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+
+management:
+  endpoint:
+    health:
+      show-details: when-authorized
+
+medigest:
+  seguridad:
+    swagger-publico: true

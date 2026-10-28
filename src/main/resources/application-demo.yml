@@ -1,0 +1,7 @@
+# Perfil de demostración: carga datos ficticios al arrancar (solo si la base está vacía).
+# Se activa junto a dev:  SPRING_PROFILES_ACTIVE=dev,demo
+# Nunca debe activarse en producción (DemoDataLoader se niega a ejecutarse con el perfil prod).
+medigest:
+  demo:
+    # Contraseña de todas las cuentas ficticias. Se define en el entorno o en .env, nunca en el repositorio.
+    password: ${DEMO_PASSWORD:}

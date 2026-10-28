@@ -1,0 +1,24 @@
+# Maven
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Secretos y entorno
+.env
+*.env.local
+application-local.yml
+
+# Logs
+logs/
+*.log
+
+# SO
+.DS_Store
+Thumbs.db
+
+# Archivos retirados pendientes de borrar a mano
+_to_delete/

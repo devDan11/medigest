@@ -1,0 +1,21 @@
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: WARN
+    com.medigestsystem: INFO
