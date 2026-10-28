@@ -23,6 +23,29 @@ ofertas automáticas, notificaciones por correo, reportes y auditoría. Zona hor
 - **Auditoría**: quién hizo qué y cuándo, con filtros y exportación.
 - **Cuatro roles**: `ADMINISTRADOR`, `MEDICO`, `RECEPCIONISTA`, `PACIENTE`.
 
+## Capturas
+
+<table>
+  <tr>
+    <td width="50%"><b>Inicio de sesión</b><br><img src="docs/capturas/login.png" alt="Inicio de sesión"></td>
+    <td width="50%"><b>Panel de inicio</b><br><img src="docs/capturas/panel.png" alt="Panel de inicio con indicadores y gráficos"></td>
+  </tr>
+  <tr>
+    <td><b>Calendario de citas</b><br><img src="docs/capturas/calendario.png" alt="Calendario de citas"></td>
+    <td><b>Reservar una cita</b><br><img src="docs/capturas/nueva-cita.png" alt="Reserva de cita con horarios libres"></td>
+  </tr>
+  <tr>
+    <td><b>Detalle e historial de una cita</b><br><img src="docs/capturas/detalle-cita.png" alt="Detalle de una cita con su historial"></td>
+    <td><b>Reportes y estadísticas</b><br><img src="docs/capturas/reportes.png" alt="Reportes con gráficos y tablas"></td>
+  </tr>
+  <tr>
+    <td><b>Lista de espera</b><br><img src="docs/capturas/lista-espera.png" alt="Lista de espera"></td>
+    <td><b>Auditoría</b><br><img src="docs/capturas/auditoria.png" alt="Registro de auditoría"></td>
+  </tr>
+</table>
+
+> Datos ficticios del perfil `demo`.
+
 ## Requisitos
 
 - JDK 21 y Maven 3.9+
