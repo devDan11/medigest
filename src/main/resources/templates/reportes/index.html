@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Reportes')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('reportes')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <h1 class="h4 mb-0">Reportes de citas</h1>
+        <div class="d-flex gap-2 mg-no-imprimir">
+            <button type="button" class="btn btn-outline-secondary btn-sm" data-imprimir>Imprimir</button>
+            <a class="btn btn-outline-success btn-sm" th:href="@{/reportes/citas.csv(vista='dia',desde=${fDesde},hasta=${fHasta},especialidadId=${fEspecialidad})}">CSV por día</a>
+            <a class="btn btn-outline-success btn-sm" th:href="@{/reportes/citas.csv(vista='medico',desde=${fDesde},hasta=${fHasta},especialidadId=${fEspecialidad})}">CSV por médico</a>
+            <a class="btn btn-outline-success btn-sm" th:href="@{/reportes/especialidades.csv(desde=${fDesde},hasta=${fHasta})}">CSV por especialidad</a>
+        </div>
+    </div>
+
+    <form class="card mg-tarjeta mb-3 mg-no-imprimir" method="get" th:action="@{/reportes}">
+        <div class="card-body row g-2 align-items-end">
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1" for="fDesde">Desde</label>
+                <input type="date" class="form-control form-control-sm" id="fDesde" name="desde" th:value="${fDesde}">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1" for="fHasta">Hasta</label>
+                <input type="date" class="form-control form-control-sm" id="fHasta" name="hasta" th:value="${fHasta}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small mb-1" for="fEspecialidad">Especialidad</label>
+                <select class="form-select form-select-sm" id="fEspecialidad" name="especialidadId">
+                    <option value="">Todas</option>
+                    <option th:each="s : ${especialidades}" th:value="${s.id}" th:text="${s.nombre}" th:selected="${s.id == fEspecialidad}"></option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button class="btn btn-primary btn-sm flex-fill" type="submit">Aplicar</button>
+                <a class="btn btn-outline-secondary btn-sm" th:href="@{/reportes}">Últimos 30 días</a>
+            </div>
+        </div>
+    </form>
+
+    <p class="text-secondary small" th:text="'Período: ' + ${@fmt.fecha(r.desde)} + ' al ' + ${@fmt.fecha(r.hasta)} + ' (hora de Lima)'">Período</p>
+
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-md-3"><div class="card mg-tarjeta"><div class="card-body py-2">
+            <div class="small text-secondary">Citas en el período</div><div class="h3 mb-0" th:text="${r.total}">0</div></div></div></div>
+        <div class="col-6 col-md-3"><div class="card mg-tarjeta"><div class="card-body py-2">
+            <div class="small text-secondary">Tasa de asistencia</div>
+            <div class="h3 mb-0" th:text="${r.tasaAsistencia != null} ? ${r.tasaAsistencia} + ' %' : '—'">—</div></div></div></div>
+        <div class="col-6 col-md-3"><div class="card mg-tarjeta"><div class="card-body py-2">
+            <div class="small text-secondary">Tasa de cancelación</div>
+            <div class="h3 mb-0" th:text="${r.tasaCancelacion != null} ? ${r.tasaCancelacion} + ' %' : '—'">—</div></div></div></div>
+        <div class="col-6 col-md-3"><div class="card mg-tarjeta"><div class="card-body py-2">
+            <div class="small text-secondary">Atendidas</div><div class="h3 mb-0" th:text="${r.porEstado.get(T(com.medigestsystem.citas.EstadoCita).ATENDIDA)}">0</div></div></div></div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-4"><div class="card mg-tarjeta h-100"><div class="card-body">
+            <h2 class="h6">Citas por estado</h2>
+            <div class="mg-grafico"><canvas id="graficoEstados" th:data-etiquetas="${etiquetasEstado}" th:data-valores="${valoresEstado}"
+                    aria-label="Citas por estado" role="img"></canvas></div>
+        </div></div></div>
+        <div class="col-lg-8"><div class="card mg-tarjeta h-100"><div class="card-body">
+            <h2 class="h6">Citas por día (sin canceladas)</h2>
+            <div class="mg-grafico"><canvas id="graficoDias" th:data-etiquetas="${etiquetasDias}" th:data-valores="${valoresDias}"
+                    aria-label="Citas por día" role="img"></canvas></div>
+        </div></div></div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6"><div class="card mg-tarjeta h-100"><div class="card-body">
+            <h2 class="h6">Por especialidad</h2>
+            <div class="mg-grafico mb-3"><canvas id="graficoEspecialidades" th:data-etiquetas="${etiquetasEsp}" th:data-valores="${valoresEsp}"
+                    aria-label="Citas por especialidad" role="img"></canvas></div>
+            <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Especialidad</th><th class="text-end">Total</th><th class="text-end">Atendidas</th><th class="text-end">Canceladas</th><th class="text-end">No asistió</th></tr></thead>
+                <tbody>
+                <tr th:each="f : ${e.especialidades}"><td th:text="${f.nombre}">x</td><td class="text-end" th:text="${f.total}">0</td>
+                    <td class="text-end" th:text="${f.atendidas}">0</td><td class="text-end" th:text="${f.canceladas}">0</td><td class="text-end" th:text="${f.noAsistio}">0</td></tr>
+                <tr th:if="${#lists.isEmpty(e.especialidades)}"><td colspan="5" class="text-center text-secondary py-3">Sin citas en el período.</td></tr>
+                </tbody></table></div>
+        </div></div></div>
+        <div class="col-lg-6"><div class="card mg-tarjeta h-100"><div class="card-body">
+            <h2 class="h6">Por médico</h2>
+            <div class="table-responsive"><table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Médico</th><th class="text-end">Total</th><th class="text-end">Atendidas</th><th class="text-end">Canceladas</th><th class="text-end">No asistió</th></tr></thead>
+                <tbody>
+                <tr th:each="f : ${r.porMedico}"><td th:text="${f.nombre}">x</td><td class="text-end" th:text="${f.total}">0</td>
+                    <td class="text-end" th:text="${f.atendidas}">0</td><td class="text-end" th:text="${f.canceladas}">0</td><td class="text-end" th:text="${f.noAsistio}">0</td></tr>
+                <tr th:if="${#lists.isEmpty(r.porMedico)}"><td colspan="5" class="text-center text-secondary py-3">Sin citas en el período.</td></tr>
+                </tbody></table></div>
+        </div></div></div>
+    </div>
+</main>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/vendor/chartjs/chart.umd.js}"></script>
+<script th:src="@{/js/medigest.js}"></script>
+<script th:src="@{/js/reportes.js}"></script>
+</body>
+</html>

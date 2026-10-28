@@ -22,3 +22,10 @@ body.mg-auth { background: linear-gradient(160deg, var(--mg-fondo) 0%, #dce8f7 1
 .fc .fc-event { cursor: pointer; }
 
 .alert:empty { display: none; }
+
+/* Impresión de reportes: sin menú ni controles */
+@media print {
+  .navbar, .mg-no-imprimir { display: none !important; }
+  .mg-tarjeta { box-shadow: none !important; break-inside: avoid; }
+  body { background: #fff !important; }
+}

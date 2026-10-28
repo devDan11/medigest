@@ -31,3 +31,8 @@ Tamaño máximo de página: 100. Respuesta: `{contenido, pagina, tamano, totalEl
 ## Otros endpoints útiles
 - `GET /pacientes/{id}/resumen` (atendidas, canceladas, no asistió, pendientes y próxima cita) y `GET /pacientes/{id}/citas` (historial).
 - `GET /medicos/{id}/resumen` y `GET /medicos/{id}/agenda?desde=2030-01-07&hasta=2030-01-13` (máx. 31 días; el médico solo ve la suya).
+
+## Módulos posteriores
+- **Citas, disponibilidad y lista de espera** (`/citas`, `/disponibilidad`, `/lista-espera`): ver `citas.md`.
+- **Notificaciones** (`/notificaciones`, solo ADMINISTRADOR): ver `notificaciones.md`.
+- **Reportes, panel y auditoría** (`/reportes`, `/dashboard/resumen`, `/auditoria`): ver `reportes.md`.

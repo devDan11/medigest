@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Notificaciones')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('admin')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <h1 class="h4 mb-0">Notificaciones por correo</h1>
+        <span class="badge" th:classappend="${correoHabilitado} ? 'text-bg-success' : 'text-bg-warning'"
+              th:text="${correoHabilitado} ? 'Envío de correo activo' : 'Envío de correo deshabilitado'">Estado</span>
+    </div>
+
+    <div class="alert alert-warning small" th:unless="${correoHabilitado}">
+        El correo está deshabilitado: las notificaciones se registran pero quedan como <strong>OMITIDA</strong>.
+        Configura <code>medigest.correo.habilitado=true</code> y <code>spring.mail.*</code>; luego usa «Reintentar».
+    </div>
+
+    <div class="row g-2 mb-3">
+        <div class="col-6 col-md-3" th:each="e : ${estados}">
+            <div class="card mg-tarjeta"><div class="card-body py-2">
+                <div class="small text-secondary" th:text="${e}">ESTADO</div>
+                <div class="h4 mb-0" th:text="${resumen.get(e)}">0</div>
+            </div></div>
+        </div>
+    </div>
+
+    <form class="card mg-tarjeta mb-3" method="get" th:action="@{/notificaciones}">
+        <div class="card-body row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small mb-1" for="estado">Estado</label>
+                <select class="form-select form-select-sm" id="estado" name="estado">
+                    <option value="">Todos</option>
+                    <option th:each="e : ${estados}" th:value="${e}" th:text="${e}" th:selected="${e == fEstado}"></option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small mb-1" for="tipo">Tipo</label>
+                <select class="form-select form-select-sm" id="tipo" name="tipo">
+                    <option value="">Todos</option>
+                    <option th:each="t : ${tipos}" th:value="${t}" th:text="${t}" th:selected="${t == fTipo}"></option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button class="btn btn-primary btn-sm flex-fill" type="submit">Filtrar</button>
+                <a class="btn btn-outline-secondary btn-sm" th:href="@{/notificaciones}">Limpiar</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="card mg-tarjeta">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Fecha</th><th>Tipo</th><th>Destinatario</th><th>Asunto</th><th>Estado</th><th>Intentos</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="n : ${pagina.contenido}">
+                    <td class="text-nowrap" th:text="${n.creadoEn != null} ? ${@fmt.fechaHora(n.creadoEn)} : '—'">fecha</td>
+                    <td><span class="badge text-bg-light border" th:text="${n.tipo}">TIPO</span></td>
+                    <td th:text="${n.destinatario}">correo</td>
+                    <td th:text="${n.asunto}">asunto</td>
+                    <td>
+                        <span class="badge" th:text="${n.estado}"
+                              th:classappend="${n.estado.name() == 'ENVIADA'} ? 'text-bg-success' : (${n.estado.name() == 'PENDIENTE'} ? 'text-bg-primary' : (${n.estado.name() == 'FALLIDA'} ? 'text-bg-danger' : 'text-bg-secondary'))">ESTADO</span>
+                        <div class="small text-secondary" th:if="${n.ultimoError != null}" th:text="${n.ultimoError}"></div>
+                    </td>
+                    <td th:text="${n.intentos}">0</td>
+                    <td class="text-end">
+                        <form method="post" th:action="@{/notificaciones/{id}/reintentar(id=${n.id})}"
+                              th:if="${n.estado.name() == 'FALLIDA' or n.estado.name() == 'OMITIDA'}">
+                            <button class="btn btn-outline-primary btn-sm" type="submit">Reintentar</button></form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(pagina.contenido)}"><td colspan="7" class="text-center text-secondary py-4">No hay notificaciones.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${pagina.totalPaginas > 1}">
+            <span class="small text-secondary" th:text="${pagina.totalElementos} + ' notificaciones · página ' + ${pagina.pagina + 1} + ' de ' + ${pagina.totalPaginas}"></span>
+            <div class="btn-group">
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina == 0} ? 'disabled'" th:href="@{/notificaciones(estado=${fEstado},tipo=${fTipo},pagina=${pagina.pagina - 1})}">Anterior</a>
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina + 1 >= pagina.totalPaginas} ? 'disabled'" th:href="@{/notificaciones(estado=${fEstado},tipo=${fTipo},pagina=${pagina.pagina + 1})}">Siguiente</a>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/medigest.js}"></script>
+</body>
+</html>

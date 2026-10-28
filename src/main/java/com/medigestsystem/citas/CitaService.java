@@ -21,6 +21,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.medigestsystem.notificaciones.AvisosNegocio;
+import com.medigestsystem.notificaciones.TipoNotificacion;
 import com.medigestsystem.auditoria.AuditoriaService;
 import com.medigestsystem.auditoria.ResultadoAuditoria;
 import com.medigestsystem.citas.dto.CancelarRequest;
@@ -77,13 +79,15 @@ public class CitaService {
     private final FechaHoraUtil fechaHora;
     private final ApplicationEventPublisher eventos;
     private final CodigoReservaGenerator codigos;
+    private final AvisosNegocio avisos;
 
     public CitaService(CitaRepository citaRepository, HistorialCitaRepository historialRepository,
                        MedicoRepository medicoRepository, PacienteRepository pacienteRepository,
                        ConsultorioRepository consultorioRepository, UsuarioRepository usuarioRepository,
                        DisponibilidadService disponibilidad, AuditoriaService auditoriaService,
                        PoliticaCitasProperties politica, FechaHoraUtil fechaHora,
-                       ApplicationEventPublisher eventos, CodigoReservaGenerator codigos) {
+                       ApplicationEventPublisher eventos, CodigoReservaGenerator codigos,
+                       AvisosNegocio avisos) {
         this.citaRepository = citaRepository;
         this.historialRepository = historialRepository;
         this.medicoRepository = medicoRepository;
@@ -96,6 +100,7 @@ public class CitaService {
         this.fechaHora = fechaHora;
         this.eventos = eventos;
         this.codigos = codigos;
+        this.avisos = avisos;
     }
 
     // ================================================================== consulta
@@ -589,6 +594,16 @@ public class CitaService {
         h.setUsuario(usuarioRepository.getReferenceById(usuarioId));
         h.setCreadoEn(ahora);
         historialRepository.save(h);
+        TipoNotificacion aviso = switch (tipo) {
+            case CREADA -> TipoNotificacion.CITA_RESERVADA;
+            case CONFIRMADA -> TipoNotificacion.CITA_CONFIRMADA;
+            case REPROGRAMADA -> TipoNotificacion.CITA_REPROGRAMADA;
+            case CANCELADA -> TipoNotificacion.CITA_CANCELADA;
+            default -> null;
+        };
+        if (aviso != null) {
+            avisos.cita(c.getId(), aviso);
+        }
     }
 
     private CitaResponse aResponse(Cita c, Actor actor) {

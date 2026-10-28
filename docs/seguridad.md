@@ -48,8 +48,10 @@ desactivada (mismo mensaje y código 401), para no revelar el estado de una cuen
    solo uso, un solo enlace vigente por usuario, máximo una solicitud por minuto.
 3. `POST /api/v1/auth/reset-password` (o `/restablecer?token=…`). Al terminar se desbloquea la cuenta.
 
-Hasta la Fase 7 no hay servidor de correo: con el perfil `dev` el enlace se escribe en el log de la aplicación
-(`[DEV] Enlace de recuperación…`). En cualquier otro perfil el token **no** se registra.
+Con `CORREO_HABILITADO=true` el enlace se envía por correo (`CorreoRecuperacionNotificador`) directamente por el canal:
+**nunca se guarda en la tabla de notificaciones** ni se escribe en el log, y un fallo de envío no se revela al solicitante.
+Con el correo deshabilitado, solo el perfil `dev` escribe el enlace en el log (`[DEV] Enlace de recuperación…`); en otro
+perfil el token **no** se registra.
 
 ## Contraseñas
 
@@ -60,7 +62,8 @@ BCrypt. Política: 8–72 caracteres, al menos una letra y un número.
 Eventos registrados en la tabla `auditoria` (transacción propia, sobreviven a un rollback): `LOGIN_EXITO`,
 `LOGIN_FALLIDO`, `CUENTA_BLOQUEADA`, `LOGIN_BLOQUEADO`, `LOGIN_RECHAZADO`, `LOGOUT`, `REGISTRO_PACIENTE`,
 `RECUPERACION_SOLICITADA`, `RECUPERACION_RESTABLECIDA`, `CAMBIO_PASSWORD`, `ACCESO_DENEGADO`, `USUARIO_ACTIVADO`,
-`USUARIO_DESACTIVADO`, `USUARIO_DESBLOQUEADO`, `ROLES_ACTUALIZADOS`. Nunca contienen contraseñas ni tokens.
+`USUARIO_DESACTIVADO`, `USUARIO_DESBLOQUEADO`, `ROLES_ACTUALIZADOS`, los eventos de citas y lista de espera (`CITA_*`, `ESPERA_*`),
+`NOTIFICACION_REINTENTADA` y `AUDITORIA_EXPORTADA`. Nunca contienen contraseñas ni tokens. Consulta: `/auditoria` y `GET /api/v1/auditoria` (solo administrador).
 
 ## Endpoints de la Fase 3
 
@@ -99,8 +102,38 @@ curl -s localhost:8080/api/v1/usuarios -H "Authorization: Bearer $TOKEN"   # sol
 curl -si localhost:8080/api/v1/usuarios                                    # 401 sin token
 ```
 
-## Pendiente para fases posteriores
+## Cabeceras de seguridad y CSP (Fase 8)
 
-- Cabeceras CSP estrictas y revisión de dependencias (Fase 8).
-- Envío real de correos de recuperación (Fase 7).
-- Pruebas de integración con SQL Server/Testcontainers de los filtros de seguridad (Fase 8).
+Todas las respuestas llevan `Content-Security-Policy`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
+`Referrer-Policy: strict-origin-when-cross-origin` y `Permissions-Policy` (sin geolocalización, cámara, micrófono ni pagos).
+
+| Cadena | CSP |
+|---|---|
+| Web | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'` |
+| API | `default-src 'none'; frame-ancestors 'none'` |
+
+- Bootstrap, Chart.js y FullCalendar se **autoalojan** en `/vendor` (licencias en `static/vendor/LICENCIAS.md`): sin CDN.
+- No hay `<script>` en línea ni manejadores `onclick=`: la interfaz usa atributos `data-*` y archivos de `static/js`.
+  `PlantillasSeguridadTest` falla si alguna plantilla incumple esto.
+- `'unsafe-inline'` solo se permite en **estilos** (FullCalendar y Chart.js los inyectan); los scripts están restringidos a recursos propios.
+- Tras activar HTTPS en producción, añada HSTS en el proxy o en Spring Security y use `server.servlet.session.cookie.secure=true` (ya activo en `prod`).
+
+## Revisión de seguridad (Fase 8)
+
+| Control | Estado |
+|---|---|
+| Autorización en el backend (`@PreAuthorize` + reglas por URL), no solo en la interfaz | ✔ probado en `SeguridadIT` |
+| CSRF en la web; API stateless sin cookies | ✔ |
+| Contraseñas con BCrypt; tokens de recuperación solo como hash SHA-256 | ✔ |
+| Mismo error para usuario inexistente y clave incorrecta | ✔ probado en `SeguridadIT` |
+| Bloqueo por intentos fallidos | ✔ |
+| Consultas con parámetros enlazados (JPA/JPQL), sin SQL concatenado | ✔ |
+| Escape de salida en plantillas (Thymeleaf `th:text`) | ✔ |
+| CSV sin inyección de fórmulas (`=`, `+`, `-`, `@`) | ✔ probado en `CsvTest` |
+| Correos sin datos clínicos; enlace de recuperación fuera de la cola y del log | ✔ |
+| Secretos fuera del repositorio (`.env`, logs, `_to_delete/` en `.gitignore`) | ✔ |
+| Errores sin trazas ni mensajes internos hacia el cliente | ✔ (`GlobalExceptionHandler`, `server.error.*`) |
+| Dependencias: revisar periódicamente (`mvn versions:display-dependency-updates`, Dependabot) | recomendado |
+
+Límites conocidos: un token de acceso emitido sigue valiendo hasta vencer (15 min); no hay limitación de tasa por IP en
+`/api/v1/auth/login` (sí bloqueo por cuenta); para producción coloque la aplicación tras un proxy con HTTPS y limitación de tasa.

@@ -33,6 +33,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 
+import com.medigestsystem.notificaciones.AvisosNegocio;
 import com.medigestsystem.auditoria.AuditoriaService;
 import com.medigestsystem.citas.CitaRepository;
 import com.medigestsystem.citas.CitaService;
@@ -72,6 +73,7 @@ class ListaEsperaServiceTest {
     @Mock DisponibilidadService disponibilidad;
     @Mock AuditoriaService auditoriaService;
     @Mock ApplicationEventPublisher eventos;
+    @Mock AvisosNegocio avisos;
 
     ListaEsperaService servicio;
     Paciente ana;
@@ -84,7 +86,7 @@ class ListaEsperaServiceTest {
     void preparar() {
         servicio = new ListaEsperaService(esperaRepository, pacienteRepository, medicoRepository,
                 especialidadRepository, citaRepository, citaService, disponibilidad, auditoriaService,
-                new PoliticaCitasProperties(60, 90, 24, 3, 30), Fixtures.fechaHora(), eventos, Fixtures.LIMA);
+                new PoliticaCitasProperties(60, 90, 24, 3, 30), Fixtures.fechaHora(), eventos, Fixtures.LIMA, avisos);
         especialidad = new Especialidad();
         especialidad.setId(1);
         especialidad.setNombre("Cardiología");

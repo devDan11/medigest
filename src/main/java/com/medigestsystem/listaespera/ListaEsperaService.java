@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.medigestsystem.notificaciones.AvisosNegocio;
 import com.medigestsystem.auditoria.AuditoriaService;
 import com.medigestsystem.auditoria.ResultadoAuditoria;
 import com.medigestsystem.citas.CitaRepository;
@@ -82,13 +83,15 @@ public class ListaEsperaService {
     private final FechaHoraUtil fechaHora;
     private final ApplicationEventPublisher eventos;
     private final ZoneId zona;
+    private final AvisosNegocio avisos;
 
     public ListaEsperaService(ListaEsperaRepository esperaRepository, PacienteRepository pacienteRepository,
                               MedicoRepository medicoRepository, EspecialidadRepository especialidadRepository,
                               CitaRepository citaRepository, CitaService citaService,
                               DisponibilidadService disponibilidad, AuditoriaService auditoriaService,
                               PoliticaCitasProperties politica, FechaHoraUtil fechaHora,
-                              ApplicationEventPublisher eventos, ZoneId zonaClinica) {
+                              ApplicationEventPublisher eventos, ZoneId zonaClinica,
+                              AvisosNegocio avisos) {
         this.esperaRepository = esperaRepository;
         this.pacienteRepository = pacienteRepository;
         this.medicoRepository = medicoRepository;
@@ -101,6 +104,7 @@ public class ListaEsperaService {
         this.fechaHora = fechaHora;
         this.eventos = eventos;
         this.zona = zonaClinica;
+        this.avisos = avisos;
     }
 
     // ================================================================== solicitudes
@@ -323,6 +327,7 @@ public class ListaEsperaService {
                 auditoriaService.registrar("ESPERA_OFERTA_CREADA", ENTIDAD, String.valueOf(cand.getId()),
                         ResultadoAuditoria.EXITO, "Vence " + expira);
                 log.info("Horario ofrecido a la solicitud de espera {} (vence {})", cand.getId(), expira);
+                avisos.ofertaEspera(cand.getId());
                 return true;
             }
         }

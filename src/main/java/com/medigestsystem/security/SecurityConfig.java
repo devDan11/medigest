@@ -10,6 +10,9 @@ import org.springframework.security.authentication.DefaultAuthenticationEventPub
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -49,9 +52,24 @@ public class SecurityConfig {
 
     private static final String[] WEB_PUBLICA = {
             "/login", "/registro", "/recuperar", "/restablecer", "/error",
-            "/css/**", "/js/**", "/img/**", "/favicon.ico",
+            "/css/**", "/js/**", "/img/**", "/vendor/**", "/favicon.ico",
             "/actuator/health", "/actuator/info"
     };
+
+    /** CSP del sitio web: solo recursos propios. Los estilos en línea se permiten porque FullCalendar y Chart.js los inyectan. */
+    private static final String CSP_WEB = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+            + "img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; "
+            + "form-action 'self'; frame-ancestors 'none'";
+    /** CSP de la API: devuelve solo JSON, no debe cargar nada. */
+    private static final String CSP_API = "default-src 'none'; frame-ancestors 'none'";
+    private static final String PERMISSIONS_POLICY = "geolocation=(), camera=(), microphone=(), payment=()";
+
+    private static Customizer<HeadersConfigurer<HttpSecurity>> cabeceras(String csp) {
+        return headers -> headers
+                .addHeaderWriter(new StaticHeadersWriter("Content-Security-Policy", csp))
+                .addHeaderWriter(new StaticHeadersWriter("Referrer-Policy", "strict-origin-when-cross-origin"))
+                .addHeaderWriter(new StaticHeadersWriter("Permissions-Policy", PERMISSIONS_POLICY));
+    }
 
     private static final String[] DOCUMENTACION_API = {
             "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**"
@@ -80,6 +98,7 @@ public class SecurityConfig {
                                               ApiSecurityHandlers handlers) throws Exception {
         http
                 .securityMatcher("/api/**")
+                .headers(cabeceras(CSP_API))
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -104,6 +123,7 @@ public class SecurityConfig {
         boolean swaggerPublico = properties.seguridad().swaggerPublico();
         http
                 .authenticationManager(authenticationManager)
+                .headers(cabeceras(CSP_WEB))
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(WEB_PUBLICA).permitAll();
                     if (swaggerPublico) {

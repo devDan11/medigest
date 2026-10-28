@@ -36,6 +36,15 @@ spring:
   jackson:
     default-property-inclusion: non_null
 
+  mail:
+    # El host SMTP se define en .env (spring.mail.host=...) solo si se habilita el correo.
+    properties:
+      "[mail.smtp.auth]": true
+      "[mail.smtp.starttls.enable]": true
+      "[mail.smtp.connectiontimeout]": 8000
+      "[mail.smtp.timeout]": 8000
+      "[mail.smtp.writetimeout]": 8000
+
 server:
   port: 8080
   servlet:
@@ -56,6 +65,9 @@ management:
   endpoint:
     health:
       show-details: never
+  health:
+    mail:
+      enabled: false          # un SMTP caído no debe poner la aplicación en DOWN
 
 springdoc:
   api-docs:
@@ -67,6 +79,13 @@ medigest:
   timezone: America/Lima
   aplicacion:
     url-base: ${APP_URL_BASE:http://localhost:8080}   # base de los enlaces de recuperación
+  correo:
+    habilitado: ${CORREO_HABILITADO:false}   # true = envío SMTP real (requiere spring.mail.host)
+    remitente: ${CORREO_REMITENTE:MediGest <no-reply@medigest.local>}
+    max-intentos: 5
+    backoff-minutos: 2
+    tamano-lote: 20
+    recordatorio-horas: 24
   seguridad:
     swagger-publico: false          # true solo en dev; en otro caso Swagger exige rol ADMINISTRADOR
     recuperacion-minutos: 30

@@ -35,6 +35,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 
+import com.medigestsystem.notificaciones.AvisosNegocio;
 import com.medigestsystem.auditoria.AuditoriaService;
 import com.medigestsystem.auditoria.ResultadoAuditoria;
 import com.medigestsystem.citas.dto.CancelarRequest;
@@ -82,6 +83,7 @@ class CitaServiceTest {
     @Mock DisponibilidadService disponibilidad;
     @Mock AuditoriaService auditoriaService;
     @Mock ApplicationEventPublisher eventos;
+    @Mock AvisosNegocio avisos;
     @Mock CodigoReservaGenerator codigos;
 
     CitaService servicio;
@@ -94,7 +96,7 @@ class CitaServiceTest {
     void preparar() {
         servicio = new CitaService(citaRepository, historialRepository, medicoRepository, pacienteRepository,
                 consultorioRepository, usuarioRepository, disponibilidad, auditoriaService,
-                new PoliticaCitasProperties(60, 90, 24, 3, 30), Fixtures.fechaHora(), eventos, codigos);
+                new PoliticaCitasProperties(60, 90, 24, 3, 30), Fixtures.fechaHora(), eventos, codigos, avisos);
 
         consultorio = new Consultorio();
         consultorio.setId(3);

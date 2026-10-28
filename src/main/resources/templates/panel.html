@@ -87,7 +87,7 @@
 </main>
 
 <th:block th:replace="~{fragments/layout :: scripts}"></th:block>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script th:src="@{/vendor/chartjs/chart.umd.js}"></script>
 <script th:src="@{/js/panel.js}"></script>
 </body>
 </html>

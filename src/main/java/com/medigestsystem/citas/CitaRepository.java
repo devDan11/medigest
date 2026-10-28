@@ -129,4 +129,34 @@ public interface CitaRepository extends JpaRepository<Cita, Long>, JpaSpecificat
             + "and (:medicoId = -1 or c.medico.id = :medicoId) and (:pacienteId = -1 or c.paciente.id = :pacienteId)")
     List<Instant> iniciosEntre(@Param("desde") Instant desde, @Param("hasta") Instant hasta,
                                @Param("medicoId") Long medicoId, @Param("pacienteId") Long pacienteId);
+
+    /** Ids de citas activas cuyo inicio cae en (desde, hasta]: candidatas a recordatorio. */
+    @Query("select c.id from Cita c where c.inicioUtc > :desde and c.inicioUtc <= :hasta and c.estado in :estados order by c.inicioUtc")
+    List<Long> idsParaRecordatorio(@Param("desde") Instant desde, @Param("hasta") Instant hasta,
+                                   @Param("estados") Collection<EstadoCita> estados);
+
+    // ------------------------------------------------------------------ reportes (-1 = sin filtro)
+
+    @Query("select c.estado, count(c) from Cita c where c.inicioUtc >= :desde and c.inicioUtc < :hasta "
+            + "and (:medicoId = -1 or c.medico.id = :medicoId) and (:especialidadId = -1 or c.especialidad.id = :especialidadId) "
+            + "group by c.estado")
+    List<Object[]> contarEstadosReporte(@Param("desde") Instant desde, @Param("hasta") Instant hasta,
+                                        @Param("medicoId") Long medicoId, @Param("especialidadId") Integer especialidadId);
+
+    @Query("select c.inicioUtc, c.estado from Cita c where c.inicioUtc >= :desde and c.inicioUtc < :hasta "
+            + "and (:medicoId = -1 or c.medico.id = :medicoId) and (:especialidadId = -1 or c.especialidad.id = :especialidadId)")
+    List<Object[]> diasReporte(@Param("desde") Instant desde, @Param("hasta") Instant hasta,
+                               @Param("medicoId") Long medicoId, @Param("especialidadId") Integer especialidadId);
+
+    @Query("select c.medico.id, c.medico.nombres, c.medico.apellidos, c.estado, count(c) from Cita c "
+            + "where c.inicioUtc >= :desde and c.inicioUtc < :hasta "
+            + "and (:medicoId = -1 or c.medico.id = :medicoId) and (:especialidadId = -1 or c.especialidad.id = :especialidadId) "
+            + "group by c.medico.id, c.medico.nombres, c.medico.apellidos, c.estado")
+    List<Object[]> medicosReporte(@Param("desde") Instant desde, @Param("hasta") Instant hasta,
+                                  @Param("medicoId") Long medicoId, @Param("especialidadId") Integer especialidadId);
+
+    @Query("select c.especialidad.id, c.especialidad.nombre, c.estado, count(c) from Cita c "
+            + "where c.inicioUtc >= :desde and c.inicioUtc < :hasta "
+            + "group by c.especialidad.id, c.especialidad.nombre, c.estado")
+    List<Object[]> especialidadesReporte(@Param("desde") Instant desde, @Param("hasta") Instant hasta);
 }
