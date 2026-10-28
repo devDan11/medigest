@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Usuarios')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('admin')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3">
+    <h1 class="h4 mb-3">Usuarios</h1>
+
+    <form class="card mg-tarjeta mb-3" method="get" th:action="@{/usuarios}">
+        <div class="card-body row g-2 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label small mb-1" for="q">Correo</label>
+                <input type="search" class="form-control form-control-sm" id="q" name="q" th:value="${fQ}">
+            </div>
+            <div class="col-md-4 d-flex gap-2">
+                <button class="btn btn-primary btn-sm flex-fill" type="submit">Buscar</button>
+                <a class="btn btn-outline-secondary btn-sm" th:href="@{/usuarios}">Limpiar</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="card mg-tarjeta">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Correo</th><th>Roles</th><th>Estado</th><th>Último acceso</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="u : ${pagina.contenido}">
+                    <td th:text="${u.email}">correo</td>
+                    <td><span class="badge text-bg-primary me-1" th:each="r : ${u.roles}" th:text="${r}">ROL</span></td>
+                    <td>
+                        <span class="badge" th:classappend="${u.activo} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${u.activo} ? 'Activa' : 'Inactiva'">Activa</span>
+                        <span class="badge text-bg-warning" th:if="${u.bloqueadoHasta != null}">Bloqueada</span>
+                    </td>
+                    <td th:text="${@fmt.instante(u.ultimoAcceso)}">—</td>
+                    <td class="text-end text-nowrap">
+                        <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modalRoles"
+                                th:data-id="${u.id}" th:data-email="${u.email}" th:data-roles="${#strings.listJoin(u.roles, ',')}">Roles</button>
+                        <form class="d-inline" method="post" th:action="@{/usuarios/{id}/desbloquear(id=${u.id})}" th:if="${u.bloqueadoHasta != null}">
+                            <button class="btn btn-outline-warning btn-sm" type="submit">Desbloquear</button></form>
+                        <form class="d-inline" method="post" th:action="@{/usuarios/{id}/estado(id=${u.id})}" th:if="${u.id != yo}"
+                              th:data-confirmar="${u.activo} ? '¿Desactivar esta cuenta? No podrá iniciar sesión.' : null">
+                            <input type="hidden" name="activo" th:value="${!u.activo}">
+                            <button class="btn btn-sm" th:classappend="${u.activo} ? 'btn-outline-danger' : 'btn-outline-success'" type="submit"
+                                    th:text="${u.activo} ? 'Desactivar' : 'Activar'">Desactivar</button></form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(pagina.contenido)}"><td colspan="5" class="text-center text-secondary py-4">No se encontraron usuarios.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${pagina.totalPaginas > 1}">
+            <span class="small text-secondary" th:text="${pagina.totalElementos} + ' usuarios · página ' + ${pagina.pagina + 1} + ' de ' + ${pagina.totalPaginas}"></span>
+            <div class="btn-group">
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina == 0} ? 'disabled'" th:href="@{/usuarios(q=${fQ},pagina=${pagina.pagina - 1})}">Anterior</a>
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina + 1 >= pagina.totalPaginas} ? 'disabled'" th:href="@{/usuarios(q=${fQ},pagina=${pagina.pagina + 1})}">Siguiente</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="modalRoles" tabindex="-1" aria-labelledby="tituloRoles" aria-hidden="true" th:data-base="@{/usuarios}">
+    <div class="modal-dialog"><form class="modal-content" method="post" id="formRoles">
+        <div class="modal-header"><h2 class="modal-title h5" id="tituloRoles">Roles</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <div class="modal-body">
+            <p class="text-secondary" id="correoRoles"></p>
+            <div class="form-check" th:each="r : ${roles}">
+                <input class="form-check-input" type="checkbox" name="roles" th:id="'rol' + ${r}" th:value="${r}">
+                <label class="form-check-label" th:for="'rol' + ${r}" th:text="${r}">ROL</label>
+            </div>
+            <div class="form-text mt-2">Debe quedar al menos un rol. No puede quitarse a sí mismo el rol de administrador.</div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar roles</button>
+        </div>
+    </form></div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/medigest.js}"></script>
+<script th:src="@{/js/usuarios.js}"></script>
+</body>
+</html>

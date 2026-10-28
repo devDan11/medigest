@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Reservar cita')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('nueva')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3" style="max-width: 900px;">
+    <h1 class="h4 mb-3">Reservar cita</h1>
+
+    <form id="formReserva" class="card mg-tarjeta" method="post" th:action="@{/citas/nueva}"
+          th:data-base="@{/app/datos}" th:data-personal="${mgPersonal}">
+        <div class="card-body p-4">
+            <input type="hidden" name="medicoId" id="medicoId">
+            <input type="hidden" name="especialidadId" id="especialidadId">
+            <input type="hidden" name="inicio" id="inicio">
+
+            <div class="mb-4 position-relative" th:if="${mgPersonal}">
+                <label class="form-label" for="buscarPaciente">1. Paciente</label>
+                <input type="search" class="form-control" id="buscarPaciente" autocomplete="off"
+                       placeholder="Buscar por nombre o número de documento (mínimo 2 caracteres)">
+                <div class="list-group mg-lista-busqueda shadow-sm" id="listaPacientes"></div>
+                <input type="hidden" name="pacienteId" id="pacienteId">
+                <div class="form-text fw-semibold text-primary" id="pacienteElegido"></div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label" for="especialidad" th:text="${mgPersonal} ? '2. Especialidad' : '1. Especialidad'">Especialidad</label>
+                <select class="form-select" id="especialidad">
+                    <option value="">Seleccione una especialidad…</option>
+                    <option th:each="e : ${especialidades}" th:value="${e.id}" th:text="${e.nombre}"></option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <div class="form-label" th:text="${mgPersonal} ? '3. Médico' : '2. Médico'">Médico</div>
+                <div id="medicos"><p class="text-secondary mb-0">Elija primero una especialidad.</p></div>
+            </div>
+
+            <div class="mb-4">
+                <div class="form-label" th:text="${mgPersonal} ? '4. Día y hora' : '3. Día y hora'">Día y hora</div>
+                <div id="horarios"><p class="text-secondary mb-0">Elija un médico para ver sus horarios libres.</p></div>
+                <div class="alert alert-primary mt-3 mb-0 py-2" id="resumen" role="status"></div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label" for="motivo">Motivo de la consulta <span class="text-secondary">(opcional)</span></label>
+                <textarea class="form-control" id="motivo" name="motivo" rows="2" maxlength="300"></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <a th:href="@{/lista-espera}" class="small">¿No hay horarios? Anótese en la lista de espera</a>
+                <button type="submit" class="btn btn-primary px-4" id="btnReservar" disabled>Reservar</button>
+            </div>
+        </div>
+    </form>
+</main>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/medigest.js}"></script>
+<script th:src="@{/js/nueva-cita.js}"></script>
+</body>
+</html>

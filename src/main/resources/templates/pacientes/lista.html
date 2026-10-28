@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Pacientes')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('pacientes')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">Pacientes</h1>
+        <a class="btn btn-primary" th:href="@{/pacientes/nuevo}">Nuevo paciente</a>
+    </div>
+
+    <form class="card mg-tarjeta mb-3" method="get" th:action="@{/pacientes}">
+        <div class="card-body row g-2 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label small mb-1" for="q">Nombre o documento</label>
+                <input type="search" class="form-control form-control-sm" id="q" name="q" th:value="${fQ}">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1" for="activo">Estado</label>
+                <select class="form-select form-select-sm" id="activo" name="activo">
+                    <option value="">Todos</option>
+                    <option value="true" th:selected="${fActivo == true}">Activos</option>
+                    <option value="false" th:selected="${fActivo == false}">Inactivos</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3 d-flex gap-2">
+                <button class="btn btn-primary btn-sm flex-fill" type="submit">Buscar</button>
+                <a class="btn btn-outline-secondary btn-sm" th:href="@{/pacientes}">Limpiar</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="card mg-tarjeta">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Paciente</th><th>Documento</th><th>Edad</th><th>Teléfono</th><th>Estado</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${pagina.contenido}">
+                    <td><a th:href="@{/pacientes/{id}(id=${p.id})}" th:text="${p.apellidos + ', ' + p.nombres}">Apellidos, Nombres</a></td>
+                    <td th:text="${p.tipoDocumento + ' ' + p.numeroDocumento}">DNI 00000000</td>
+                    <td th:text="${p.edad}">0</td>
+                    <td th:text="${p.telefono != null} ? ${p.telefono} : '—'">—</td>
+                    <td><span class="badge" th:classappend="${p.activo} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${p.activo} ? 'Activo' : 'Inactivo'">Activo</span></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(pagina.contenido)}"><td colspan="5" class="text-center text-secondary py-4">No se encontraron pacientes.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${pagina.totalPaginas > 1}">
+            <span class="small text-secondary" th:text="${pagina.totalElementos} + ' pacientes · página ' + ${pagina.pagina + 1} + ' de ' + ${pagina.totalPaginas}"></span>
+            <div class="btn-group">
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina == 0} ? 'disabled'" th:href="@{/pacientes(q=${fQ},activo=${fActivo},pagina=${pagina.pagina - 1})}">Anterior</a>
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina + 1 >= pagina.totalPaginas} ? 'disabled'" th:href="@{/pacientes(q=${fQ},activo=${fActivo},pagina=${pagina.pagina + 1})}">Siguiente</a>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

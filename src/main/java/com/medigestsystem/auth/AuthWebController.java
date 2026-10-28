@@ -44,12 +44,8 @@ public class AuthWebController {
     }
 
     @GetMapping("/inicio")
-    public String inicio(Authentication authentication, Model model) {
-        if (authentication.getPrincipal() instanceof UsuarioPrincipal principal) {
-            model.addAttribute("email", principal.getUsername());
-            model.addAttribute("roles", principal.getRoles());
-        }
-        return "inicio";
+    public String inicio() {
+        return "redirect:/panel";
     }
 
     @GetMapping("/registro")

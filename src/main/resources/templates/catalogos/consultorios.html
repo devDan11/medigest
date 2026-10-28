@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Consultorios')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('admin')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3" style="max-width: 860px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">Consultorios</h1>
+        <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalCatalogo">Nuevo consultorio</button>
+    </div>
+
+    <div class="card mg-tarjeta">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Código</th><th>Ubicación</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="c : ${items}">
+                    <td th:text="${c.codigo}">C-101</td>
+                    <td th:text="${c.ubicacion != null} ? ${c.ubicacion} : '—'">—</td>
+                    <td><span class="badge" th:classappend="${c.activo} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${c.activo} ? 'Activo' : 'Inactivo'">Activo</span></td>
+                    <td class="text-end text-nowrap">
+                        <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modalCatalogo"
+                                th:data-id="${c.id}" th:data-codigo="${c.codigo}" th:data-ubicacion="${c.ubicacion}">Editar</button>
+                        <form class="d-inline" method="post" th:action="@{/consultorios/{id}/estado(id=${c.id})}">
+                            <input type="hidden" name="activo" th:value="${!c.activo}">
+                            <button class="btn btn-sm" th:classappend="${c.activo} ? 'btn-outline-danger' : 'btn-outline-success'" type="submit"
+                                    th:text="${c.activo} ? 'Desactivar' : 'Activar'">Desactivar</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(items)}"><td colspan="4" class="text-center text-secondary py-4">No hay consultorios.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="modalCatalogo" tabindex="-1" aria-labelledby="tituloCatalogo" aria-hidden="true">
+    <div class="modal-dialog"><form class="modal-content" method="post" th:action="@{/consultorios}">
+        <div class="modal-header"><h2 class="modal-title h5" id="tituloCatalogo">Consultorio</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <div class="modal-body">
+            <input type="hidden" name="id" id="campoId">
+            <div class="mb-3"><label class="form-label" for="campoCodigo">Código</label>
+                <input class="form-control" id="campoCodigo" name="codigo" maxlength="20" required></div>
+            <div class="mb-3"><label class="form-label" for="campoUbicacion">Ubicación</label>
+                <input class="form-control" id="campoUbicacion" name="ubicacion" maxlength="100"></div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+    </form></div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/catalogos.js}"></script>
+</body>
+</html>

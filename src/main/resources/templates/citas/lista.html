@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Citas')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('citas')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0" th:text="${mgPaciente} ? 'Mis citas' : (${mgMedico} ? 'Mi agenda' : 'Citas')">Citas</h1>
+        <a class="btn btn-primary" th:href="@{/citas/nueva}" th:if="${mgPersonal or mgPaciente}">Reservar cita</a>
+    </div>
+
+    <div class="mb-3 d-flex gap-2" th:if="${mgMedico}">
+        <a class="btn btn-outline-primary btn-sm" th:href="@{/citas(desde=${hoy},hasta=${hoy})}">Hoy</a>
+        <a class="btn btn-outline-primary btn-sm" th:href="@{/citas(desde=${hoy},hasta=${finSemana})}">Próximos 7 días</a>
+    </div>
+
+    <form class="card mg-tarjeta mb-3" method="get" th:action="@{/citas}">
+        <div class="card-body row g-2 align-items-end">
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1" for="fEstado">Estado</label>
+                <select class="form-select form-select-sm" id="fEstado" name="estado">
+                    <option value="">Todos</option>
+                    <option th:each="e : ${estados}" th:value="${e}" th:text="${@fmt.estado(e)}" th:selected="${e == fEstado}"></option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1" for="fEspecialidad">Especialidad</label>
+                <select class="form-select form-select-sm" id="fEspecialidad" name="especialidadId">
+                    <option value="">Todas</option>
+                    <option th:each="e : ${especialidades}" th:value="${e.id}" th:text="${e.nombre}" th:selected="${e.id == fEspecialidad}"></option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="fDesde">Desde</label>
+                <input type="date" class="form-control form-control-sm" id="fDesde" name="desde" th:value="${fDesde}">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="fHasta">Hasta</label>
+                <input type="date" class="form-control form-control-sm" id="fHasta" name="hasta" th:value="${fHasta}">
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button class="btn btn-primary btn-sm flex-fill" type="submit">Filtrar</button>
+                <a class="btn btn-outline-secondary btn-sm" th:href="@{/citas}">Limpiar</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="card mg-tarjeta">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Código</th><th>Fecha y hora</th><th>Paciente</th><th>Médico</th><th>Especialidad</th><th>Consultorio</th><th>Estado</th></tr></thead>
+                <tbody>
+                <tr th:each="c : ${pagina.contenido}">
+                    <td><a th:href="@{/citas/{id}(id=${c.id})}" th:text="${c.codigoReserva}">MG-XXXX</a></td>
+                    <td th:text="${@fmt.fechaHora(c.inicio)}">fecha</td>
+                    <td th:text="${c.paciente}">Paciente</td>
+                    <td th:text="${c.medico}">Médico</td>
+                    <td th:text="${c.especialidad}">Especialidad</td>
+                    <td th:text="${c.consultorio}">Consultorio</td>
+                    <td><span class="badge" th:classappend="${@fmt.claseEstado(c.estado)}" th:text="${@fmt.estado(c.estado)}">Estado</span></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(pagina.contenido)}"><td colspan="7" class="text-center text-secondary py-4">No se encontraron citas.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${pagina.totalPaginas > 1}">
+            <span class="small text-secondary" th:text="${pagina.totalElementos} + ' citas · página ' + ${pagina.pagina + 1} + ' de ' + ${pagina.totalPaginas}"></span>
+            <div class="btn-group">
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina == 0} ? 'disabled'"
+                   th:href="@{/citas(estado=${fEstado},especialidadId=${fEspecialidad},desde=${fDesde},hasta=${fHasta},pagina=${pagina.pagina - 1})}">Anterior</a>
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina + 1 >= pagina.totalPaginas} ? 'disabled'"
+                   th:href="@{/citas(estado=${fEstado},especialidadId=${fEspecialidad},desde=${fDesde},hasta=${fHasta},pagina=${pagina.pagina + 1})}">Siguiente</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

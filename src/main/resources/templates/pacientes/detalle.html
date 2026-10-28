@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Paciente')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('pacientes')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3" style="max-width: 960px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0" th:text="${p.apellidos + ', ' + p.nombres}">Paciente</h1>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary btn-sm" th:href="@{/pacientes}">Volver</a>
+            <a class="btn btn-outline-primary btn-sm" th:href="@{/pacientes/{id}/editar(id=${p.id})}">Editar</a>
+            <form method="post" th:action="@{/pacientes/{id}/estado(id=${p.id})}" th:if="${mgAdmin}"
+                  th:data-confirmar="${p.activo} ? '¿Desactivar a este paciente? No podrá reservar citas.' : null">
+                <input type="hidden" name="activo" th:value="${!p.activo}">
+                <button class="btn btn-sm" th:classappend="${p.activo} ? 'btn-outline-danger' : 'btn-outline-success'" type="submit"
+                        th:text="${p.activo} ? 'Desactivar' : 'Activar'">Desactivar</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-7">
+            <div class="card mg-tarjeta h-100"><div class="card-body">
+                <div class="mb-2"><span class="badge" th:classappend="${p.activo} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${p.activo} ? 'Activo' : 'Inactivo'">Activo</span>
+                    <span class="badge text-bg-light" th:text="${p.tieneCuenta} ? 'Con cuenta de acceso' : 'Sin cuenta de acceso'"></span></div>
+                <dl class="row mb-0">
+                    <dt class="col-sm-5">Documento</dt><dd class="col-sm-7" th:text="${p.tipoDocumento + ' ' + p.numeroDocumento}">DNI</dd>
+                    <dt class="col-sm-5">Nacimiento</dt><dd class="col-sm-7" th:text="${@fmt.fecha(p.fechaNacimiento)} + ' (' + ${p.edad} + ' años)'">fecha</dd>
+                    <dt class="col-sm-5">Sexo</dt><dd class="col-sm-7" th:text="${p.sexo != null} ? ${p.sexo} : '—'">—</dd>
+                    <dt class="col-sm-5">Correo</dt><dd class="col-sm-7" th:text="${p.email != null} ? ${p.email} : '—'">—</dd>
+                    <dt class="col-sm-5">Teléfono</dt><dd class="col-sm-7" th:text="${p.telefono != null} ? ${p.telefono} : '—'">—</dd>
+                    <dt class="col-sm-5">Dirección</dt><dd class="col-sm-7" th:text="${p.direccion != null} ? ${p.direccion} : '—'">—</dd>
+                    <dt class="col-sm-5">Emergencia</dt>
+                    <dd class="col-sm-7" th:text="${p.contactoEmergenciaNombre != null} ? (${p.contactoEmergenciaNombre} + ' · ' + ${p.contactoEmergenciaTelefono}) : '—'">—</dd>
+                </dl>
+            </div></div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card mg-tarjeta h-100"><div class="card-body">
+                <h2 class="h6">Resumen de citas</h2>
+                <ul class="list-unstyled mb-3">
+                    <li>Pendientes: <strong th:text="${resumen.citasPendientes}">0</strong></li>
+                    <li>Atendidas: <strong th:text="${resumen.citasAtendidas}">0</strong></li>
+                    <li>Canceladas: <strong th:text="${resumen.citasCanceladas}">0</strong></li>
+                    <li>No asistió: <strong th:text="${resumen.citasNoAsistio}">0</strong></li>
+                </ul>
+                <div th:if="${resumen.proximaCita != null}">
+                    <div class="small text-secondary">Próxima cita</div>
+                    <a th:href="@{/citas/{id}(id=${resumen.proximaCita.id})}"
+                       th:text="${@fmt.fechaHora(resumen.proximaCita.inicio)} + ' · ' + ${resumen.proximaCita.medico}">próxima</a>
+                </div>
+                <a class="btn btn-primary btn-sm mt-3" th:href="@{/citas/nueva}" th:if="${p.activo}">Reservar cita</a>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="card mg-tarjeta">
+        <div class="card-body">
+            <h2 class="h6">Últimas citas</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Fecha</th><th>Médico</th><th>Especialidad</th><th>Estado</th></tr></thead>
+                    <tbody>
+                    <tr th:each="c : ${citas.contenido}">
+                        <td><a th:href="@{/citas/{id}(id=${c.id})}" th:text="${@fmt.fechaHora(c.inicio)}">fecha</a></td>
+                        <td th:text="${c.medico}">Médico</td>
+                        <td th:text="${c.especialidad}">Especialidad</td>
+                        <td><span class="badge" th:classappend="${@fmt.claseEstado(c.estado)}" th:text="${@fmt.estado(c.estado)}">Estado</span></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(citas.contenido)}"><td colspan="4" class="text-center text-secondary py-3">Sin citas registradas.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/medigest.js}"></script>
+</body>
+</html>

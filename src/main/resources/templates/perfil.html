@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Mi perfil')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('perfil')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3" style="max-width: 760px;">
+    <h1 class="h4 mb-3">Mi perfil</h1>
+
+    <div class="card mg-tarjeta mb-3"><div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Nombre</dt><dd class="col-sm-8" th:text="${p.nombres + ' ' + p.apellidos}">Nombre</dd>
+            <dt class="col-sm-4">Documento</dt><dd class="col-sm-8" th:text="${p.tipoDocumento + ' ' + p.numeroDocumento}">DNI</dd>
+            <dt class="col-sm-4">Nacimiento</dt><dd class="col-sm-8" th:text="${@fmt.fecha(p.fechaNacimiento)}">fecha</dd>
+        </dl>
+        <p class="small text-secondary mt-2 mb-0">Para corregir su nombre o documento, comuníquese con recepción.</p>
+    </div></div>
+
+    <form class="card mg-tarjeta" method="post" th:action="@{/perfil}">
+        <div class="card-body p-4 row g-3">
+            <h2 class="h6 mb-0">Datos de contacto</h2>
+            <div class="col-md-6">
+                <label class="form-label" for="email">Correo electrónico</label>
+                <input type="email" class="form-control" id="email" name="email" maxlength="150" th:value="${@fmt.valor(mgForm, 'email', p.email)}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="telefono">Teléfono</label>
+                <input class="form-control" id="telefono" name="telefono" maxlength="20" th:value="${@fmt.valor(mgForm, 'telefono', p.telefono)}">
+            </div>
+            <div class="col-12">
+                <label class="form-label" for="direccion">Dirección</label>
+                <input class="form-control" id="direccion" name="direccion" maxlength="200" th:value="${@fmt.valor(mgForm, 'direccion', p.direccion)}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="contactoEmergenciaNombre">Contacto de emergencia</label>
+                <input class="form-control" id="contactoEmergenciaNombre" name="contactoEmergenciaNombre" maxlength="100" th:value="${@fmt.valor(mgForm, 'contactoEmergenciaNombre', p.contactoEmergenciaNombre)}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="contactoEmergenciaTelefono">Teléfono de emergencia</label>
+                <input class="form-control" id="contactoEmergenciaTelefono" name="contactoEmergenciaTelefono" maxlength="20" th:value="${@fmt.valor(mgForm, 'contactoEmergenciaTelefono', p.contactoEmergenciaTelefono)}">
+            </div>
+            <div class="col-12 text-end"><button type="submit" class="btn btn-primary">Guardar cambios</button></div>
+        </div>
+    </form>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

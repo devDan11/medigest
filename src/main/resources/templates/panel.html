@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Panel')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('panel')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3">
+    <h1 class="h4 mb-3">Panel</h1>
+
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3">
+            <div class="card mg-stat"><div class="card-body">
+                <div class="mg-stat-valor" th:text="${r.citasHoy}">0</div>
+                <div class="text-secondary small" th:text="${r.globales} ? 'Citas de hoy' : (${mgMedico} ? 'Pacientes de hoy' : 'Mis citas de hoy')">Citas de hoy</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card mg-stat"><div class="card-body">
+                <div class="mg-stat-valor" th:text="${r.pendientesDeConfirmar}">0</div>
+                <div class="text-secondary small">Pendientes de confirmar (30 días)</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3" th:if="${r.globales}">
+            <div class="card mg-stat"><div class="card-body">
+                <div class="mg-stat-valor" th:text="${r.pacientesActivos}">0</div>
+                <div class="text-secondary small">Pacientes activos</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3" th:if="${r.globales}">
+            <div class="card mg-stat"><div class="card-body">
+                <div class="mg-stat-valor" th:text="${r.medicosActivos}">0</div>
+                <div class="text-secondary small">Médicos activos</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3" th:if="${r.esperaActiva != null and !r.globales}">
+            <div class="card mg-stat"><div class="card-body">
+                <div class="mg-stat-valor" th:text="${r.esperaActiva}">0</div>
+                <div class="text-secondary small">En lista de espera</div>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-5">
+            <div class="card mg-tarjeta h-100"><div class="card-body">
+                <h2 class="h6">Estado de las citas de hoy</h2>
+                <div class="mg-grafico"><canvas id="graficoEstados"
+                        th:data-etiquetas="${etiquetasEstado}" th:data-valores="${valoresEstado}"
+                        aria-label="Citas de hoy por estado" role="img"></canvas></div>
+                <p class="text-secondary small mb-0" th:if="${r.citasHoy == 0}">No hay citas programadas para hoy.</p>
+            </div></div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card mg-tarjeta h-100"><div class="card-body">
+                <h2 class="h6">Citas de los próximos 7 días</h2>
+                <div class="mg-grafico"><canvas id="graficoDias"
+                        th:data-etiquetas="${etiquetasDias}" th:data-valores="${valoresDias}"
+                        aria-label="Citas por día" role="img"></canvas></div>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="card mg-tarjeta">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h6 mb-0">Próximas citas</h2>
+                <a class="btn btn-sm btn-outline-primary" th:href="@{/citas}">Ver todas</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Fecha y hora</th><th>Paciente</th><th>Médico</th><th>Especialidad</th><th>Estado</th></tr></thead>
+                    <tbody>
+                    <tr th:each="c : ${r.proximas}">
+                        <td><a th:href="@{/citas/{id}(id=${c.id})}" th:text="${@fmt.fechaHora(c.inicio)}">01/01/2030 09:00</a></td>
+                        <td th:text="${c.paciente}">Paciente</td>
+                        <td th:text="${c.medico}">Médico</td>
+                        <td th:text="${c.especialidad}">Especialidad</td>
+                        <td><span class="badge" th:classappend="${@fmt.claseEstado(c.estado)}" th:text="${@fmt.estado(c.estado)}">Estado</span></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(r.proximas)}"><td colspan="5" class="text-center text-secondary py-4">No hay citas próximas.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script th:src="@{/js/panel.js}"></script>
+</body>
+</html>

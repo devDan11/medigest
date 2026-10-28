@@ -115,4 +115,18 @@ public interface CitaRepository extends JpaRepository<Cita, Long>, JpaSpecificat
     @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = "8000"))
     @Query("select c from Cita c where c.id = :id")
     Optional<Cita> obtenerConBloqueo(@Param("id") Long id);
+
+    /** Conteo de citas por estado en un rango (-1 = sin filtrar por médico / paciente). */
+    @Query("select c.estado, count(c) from Cita c where c.inicioUtc >= :desde and c.inicioUtc < :hasta "
+            + "and (:medicoId = -1 or c.medico.id = :medicoId) and (:pacienteId = -1 or c.paciente.id = :pacienteId) "
+            + "group by c.estado")
+    List<Object[]> contarPorEstado(@Param("desde") Instant desde, @Param("hasta") Instant hasta,
+                                   @Param("medicoId") Long medicoId, @Param("pacienteId") Long pacienteId);
+
+    /** Instantes de inicio de las citas no canceladas de un rango (para agrupar por día local). */
+    @Query("select c.inicioUtc from Cita c where c.inicioUtc >= :desde and c.inicioUtc < :hasta "
+            + "and c.estado <> com.medigestsystem.citas.EstadoCita.CANCELADA "
+            + "and (:medicoId = -1 or c.medico.id = :medicoId) and (:pacienteId = -1 or c.paciente.id = :pacienteId)")
+    List<Instant> iniciosEntre(@Param("desde") Instant desde, @Param("hasta") Instant hasta,
+                               @Param("medicoId") Long medicoId, @Param("pacienteId") Long pacienteId);
 }

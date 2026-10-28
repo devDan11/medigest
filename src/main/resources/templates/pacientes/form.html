@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Paciente')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('pacientes')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3" style="max-width: 860px;">
+    <h1 class="h4 mb-3" th:text="${titulo}">Paciente</h1>
+    <form class="card mg-tarjeta" method="post" th:action="@{${accion}}">
+        <div class="card-body p-4 row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="nombres">Nombres</label>
+                <input class="form-control" id="nombres" name="nombres" maxlength="100" required th:value="${@fmt.valor(mgForm, 'nombres', p?.nombres)}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="apellidos">Apellidos</label>
+                <input class="form-control" id="apellidos" name="apellidos" maxlength="100" required th:value="${@fmt.valor(mgForm, 'apellidos', p?.apellidos)}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="tipoDocumento">Tipo de documento</label>
+                <select class="form-select" id="tipoDocumento" name="tipoDocumento" required>
+                    <option th:each="t : ${tiposDocumento}" th:value="${t}" th:text="${t}"
+                            th:selected="${@fmt.valor(mgForm, 'tipoDocumento', p?.tipoDocumento) == t.name()}"></option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="numeroDocumento">Número de documento</label>
+                <input class="form-control" id="numeroDocumento" name="numeroDocumento" maxlength="20" required th:value="${@fmt.valor(mgForm, 'numeroDocumento', p?.numeroDocumento)}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="fechaNacimiento">Fecha de nacimiento</label>
+                <input type="date" class="form-control" id="fechaNacimiento" name="fechaNacimiento" required th:value="${@fmt.valor(mgForm, 'fechaNacimiento', p?.fechaNacimiento)}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="sexo">Sexo</label>
+                <select class="form-select" id="sexo" name="sexo">
+                    <option value="">No indica</option>
+                    <option value="M" th:selected="${@fmt.valor(mgForm, 'sexo', p?.sexo) == 'M'}">Masculino</option>
+                    <option value="F" th:selected="${@fmt.valor(mgForm, 'sexo', p?.sexo) == 'F'}">Femenino</option>
+                    <option value="O" th:selected="${@fmt.valor(mgForm, 'sexo', p?.sexo) == 'O'}">Otro</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="email">Correo electrónico</label>
+                <input type="email" class="form-control" id="email" name="email" maxlength="150" th:value="${@fmt.valor(mgForm, 'email', p?.email)}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="telefono">Teléfono</label>
+                <input class="form-control" id="telefono" name="telefono" maxlength="20" th:value="${@fmt.valor(mgForm, 'telefono', p?.telefono)}">
+            </div>
+            <div class="col-12">
+                <label class="form-label" for="direccion">Dirección</label>
+                <input class="form-control" id="direccion" name="direccion" maxlength="200" th:value="${@fmt.valor(mgForm, 'direccion', p?.direccion)}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="contactoEmergenciaNombre">Contacto de emergencia</label>
+                <input class="form-control" id="contactoEmergenciaNombre" name="contactoEmergenciaNombre" maxlength="100" th:value="${@fmt.valor(mgForm, 'contactoEmergenciaNombre', p?.contactoEmergenciaNombre)}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="contactoEmergenciaTelefono">Teléfono de emergencia</label>
+                <input class="form-control" id="contactoEmergenciaTelefono" name="contactoEmergenciaTelefono" maxlength="20" th:value="${@fmt.valor(mgForm, 'contactoEmergenciaTelefono', p?.contactoEmergenciaTelefono)}">
+            </div>
+            <div class="col-12 d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-secondary" th:href="${p != null} ? @{/pacientes/{id}(id=${p.id})} : @{/pacientes}">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </form>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Médicos')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('medicos')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">Médicos</h1>
+        <a class="btn btn-primary" th:href="@{/medicos/nuevo}" th:if="${mgAdmin}">Nuevo médico</a>
+    </div>
+
+    <form class="card mg-tarjeta mb-3" method="get" th:action="@{/medicos}">
+        <div class="card-body row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small mb-1" for="q">Nombre o colegiatura</label>
+                <input type="search" class="form-control form-control-sm" id="q" name="q" th:value="${fQ}">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small mb-1" for="especialidadId">Especialidad</label>
+                <select class="form-select form-select-sm" id="especialidadId" name="especialidadId">
+                    <option value="">Todas</option>
+                    <option th:each="e : ${especialidades}" th:value="${e.id}" th:text="${e.nombre}" th:selected="${e.id == fEspecialidad}"></option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small mb-1" for="activo">Estado</label>
+                <select class="form-select form-select-sm" id="activo" name="activo">
+                    <option value="">Todos</option>
+                    <option value="true" th:selected="${fActivo == true}">Activos</option>
+                    <option value="false" th:selected="${fActivo == false}">Inactivos</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3 d-flex gap-2">
+                <button class="btn btn-primary btn-sm flex-fill" type="submit">Buscar</button>
+                <a class="btn btn-outline-secondary btn-sm" th:href="@{/medicos}">Limpiar</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="card mg-tarjeta">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Médico</th><th>Colegiatura</th><th>Especialidades</th><th>Consultorio</th><th>Consulta</th><th>Estado</th></tr></thead>
+                <tbody>
+                <tr th:each="m : ${pagina.contenido}">
+                    <td><a th:href="@{/medicos/{id}(id=${m.id})}" th:text="${m.apellidos + ', ' + m.nombres}">Apellidos, Nombres</a></td>
+                    <td th:text="${m.numeroColegiatura}">CMP</td>
+                    <td><span class="badge text-bg-light me-1" th:each="e : ${m.especialidades}" th:text="${e.nombre}">Esp</span></td>
+                    <td th:text="${m.consultorio != null} ? ${m.consultorio.codigo} : '—'">—</td>
+                    <td th:text="${m.duracionConsultaMin} + ' min'">30 min</td>
+                    <td><span class="badge" th:classappend="${m.activo} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${m.activo} ? 'Activo' : 'Inactivo'">Activo</span></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(pagina.contenido)}"><td colspan="6" class="text-center text-secondary py-4">No se encontraron médicos.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${pagina.totalPaginas > 1}">
+            <span class="small text-secondary" th:text="${pagina.totalElementos} + ' médicos · página ' + ${pagina.pagina + 1} + ' de ' + ${pagina.totalPaginas}"></span>
+            <div class="btn-group">
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina == 0} ? 'disabled'" th:href="@{/medicos(q=${fQ},especialidadId=${fEspecialidad},activo=${fActivo},pagina=${pagina.pagina - 1})}">Anterior</a>
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina + 1 >= pagina.totalPaginas} ? 'disabled'" th:href="@{/medicos(q=${fQ},especialidadId=${fEspecialidad},activo=${fActivo},pagina=${pagina.pagina + 1})}">Siguiente</a>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

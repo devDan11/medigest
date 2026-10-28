@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Lista de espera')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('espera')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">Lista de espera</h1>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#nuevaEspera">Anotarse en la lista</button>
+    </div>
+
+    <div class="collapse mb-3" id="nuevaEspera">
+        <form id="formEspera" class="card mg-tarjeta" method="post" th:action="@{/lista-espera}"
+              th:data-base="@{/app/datos}" th:data-personal="${mgPersonal}">
+            <div class="card-body row g-3">
+                <div class="col-12 position-relative" th:if="${mgPersonal}">
+                    <label class="form-label" for="buscarPaciente">Paciente</label>
+                    <input type="search" class="form-control" id="buscarPaciente" autocomplete="off"
+                           placeholder="Buscar por nombre o número de documento">
+                    <div class="list-group mg-lista-busqueda shadow-sm" id="listaPacientes"></div>
+                    <input type="hidden" name="pacienteId" id="pacienteId">
+                    <div class="form-text fw-semibold text-primary" id="pacienteElegido"></div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="esperaEspecialidad">Especialidad</label>
+                    <select class="form-select" id="esperaEspecialidad" name="especialidadId" required>
+                        <option value="">Seleccione…</option>
+                        <option th:each="e : ${especialidades}" th:value="${e.id}" th:text="${e.nombre}"></option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="esperaMedico">Médico</label>
+                    <select class="form-select" id="esperaMedico" name="medicoId">
+                        <option value="">Cualquier médico de la especialidad</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="fechaDesde">Desde</label>
+                    <input type="date" class="form-control" id="fechaDesde" name="fechaDesde" th:min="${hoy}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="fechaHasta">Hasta</label>
+                    <input type="date" class="form-control" id="fechaHasta" name="fechaHasta" th:min="${hoy}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="franja">Horario preferido</label>
+                    <select class="form-select" id="franja" name="franja">
+                        <option th:each="f : ${franjas}" th:value="${f}" th:text="${@fmt.franja(f)}"></option>
+                    </select>
+                </div>
+                <div class="col-12 text-end">
+                    <button type="submit" class="btn btn-primary">Registrar solicitud</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <form class="mb-3 d-flex gap-2 align-items-center" method="get" th:action="@{/lista-espera}">
+        <label class="small text-secondary" for="fEstado">Estado</label>
+        <select class="form-select form-select-sm w-auto" id="fEstado" name="estado">
+            <option value="">Todos</option>
+            <option th:each="e : ${estados}" th:value="${e}" th:text="${@fmt.estadoEspera(e)}" th:selected="${e == fEstado}"></option>
+        </select>
+        <button class="btn btn-outline-primary btn-sm" type="submit">Filtrar</button>
+    </form>
+
+    <div class="card mg-tarjeta">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Paciente</th><th>Especialidad</th><th>Médico</th><th>Fechas</th><th>Horario</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="e : ${pagina.contenido}">
+                    <td th:text="${e.paciente}">Paciente</td>
+                    <td th:text="${e.especialidad}">Especialidad</td>
+                    <td th:text="${e.medico != null} ? ${e.medico} : 'Cualquiera'">Médico</td>
+                    <td th:text="${@fmt.fecha(e.fechaDesde)} + ' – ' + ${@fmt.fecha(e.fechaHasta)}">fechas</td>
+                    <td th:text="${@fmt.franja(e.franja)}">Franja</td>
+                    <td>
+                        <span class="badge" th:classappend="${@fmt.claseEspera(e.estado)}" th:text="${@fmt.estadoEspera(e.estado)}">Estado</span>
+                        <span class="d-block small text-secondary" th:if="${e.posicion != null}" th:text="'Posición ' + ${e.posicion}"></span>
+                        <div class="small mt-1" th:if="${e.oferta != null}">
+                            <strong th:text="${@fmt.fechaHora(e.oferta.inicio)}">fecha</strong> con <span th:text="${e.oferta.medico}">médico</span><br>
+                            <span class="text-danger">Reservado hasta las <span th:text="${@fmt.hora(e.oferta.expiraEn)}">hora</span></span>
+                        </div>
+                        <a class="small d-block" th:if="${e.citaId != null}" th:href="@{/citas/{id}(id=${e.citaId})}">Ver cita</a>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <form class="d-inline" method="post" th:action="@{/lista-espera/{id}/aceptar(id=${e.id})}" th:if="${e.oferta != null}">
+                            <button class="btn btn-success btn-sm" type="submit">Aceptar</button>
+                        </form>
+                        <form class="d-inline" method="post" th:action="@{/lista-espera/{id}/rechazar(id=${e.id})}" th:if="${e.oferta != null}">
+                            <button class="btn btn-outline-secondary btn-sm" type="submit">Rechazar</button>
+                        </form>
+                        <form class="d-inline" method="post" th:action="@{/lista-espera/{id}/cancelar(id=${e.id})}"
+                              th:if="${e.estado.name() == 'ACTIVA' or e.estado.name() == 'OFERTADA'}"
+                              data-confirmar="¿Retirar esta solicitud de la lista de espera?">
+                            <button class="btn btn-outline-danger btn-sm" type="submit">Retirar</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(pagina.contenido)}"><td colspan="7" class="text-center text-secondary py-4">No hay solicitudes.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${pagina.totalPaginas > 1}">
+            <span class="small text-secondary" th:text="${pagina.totalElementos} + ' solicitudes · página ' + ${pagina.pagina + 1} + ' de ' + ${pagina.totalPaginas}"></span>
+            <div class="btn-group">
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina == 0} ? 'disabled'"
+                   th:href="@{/lista-espera(estado=${fEstado},pagina=${pagina.pagina - 1})}">Anterior</a>
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina + 1 >= pagina.totalPaginas} ? 'disabled'"
+                   th:href="@{/lista-espera(estado=${fEstado},pagina=${pagina.pagina + 1})}">Siguiente</a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/medigest.js}"></script>
+<script th:src="@{/js/lista-espera.js}"></script>
+</body>
+</html>

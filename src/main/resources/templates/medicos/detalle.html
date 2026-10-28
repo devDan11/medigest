@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Médico')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('medicos')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3" style="max-width: 1000px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0" th:text="${m.apellidos + ', ' + m.nombres}">Médico</h1>
+        <div class="d-flex gap-2" th:if="${mgPersonal}">
+            <a class="btn btn-outline-secondary btn-sm" th:href="@{/medicos}">Volver</a>
+            <a class="btn btn-outline-primary btn-sm" th:href="@{/medicos/{id}/editar(id=${m.id})}" th:if="${mgAdmin}">Editar</a>
+            <form method="post" th:action="@{/medicos/{id}/estado(id=${m.id})}" th:if="${mgAdmin}"
+                  th:data-confirmar="${m.activo} ? '¿Desactivar a este médico? No aparecerá para nuevas reservas.' : null">
+                <input type="hidden" name="activo" th:value="${!m.activo}">
+                <button class="btn btn-sm" th:classappend="${m.activo} ? 'btn-outline-danger' : 'btn-outline-success'" type="submit"
+                        th:text="${m.activo} ? 'Desactivar' : 'Activar'">Desactivar</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mg-tarjeta mb-3"><div class="card-body">
+        <div class="mb-2">
+            <span class="badge" th:classappend="${m.activo} ? 'text-bg-success' : 'text-bg-secondary'" th:text="${m.activo} ? 'Activo' : 'Inactivo'">Activo</span>
+            <span class="badge text-bg-light" th:text="${m.tieneCuenta} ? 'Con cuenta de acceso' : 'Sin cuenta de acceso'"></span>
+        </div>
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Colegiatura</dt><dd class="col-sm-9" th:text="${m.numeroColegiatura}">CMP</dd>
+            <dt class="col-sm-3">Especialidades</dt>
+            <dd class="col-sm-9"><span class="badge text-bg-primary me-1" th:each="e : ${m.especialidades}" th:text="${e.nombre}">Esp</span></dd>
+            <dt class="col-sm-3">Consultorio</dt>
+            <dd class="col-sm-9" th:text="${m.consultorio != null} ? (${m.consultorio.codigo} + (${m.consultorio.ubicacion} != null ? ' · ' + ${m.consultorio.ubicacion} : '')) : '—'">—</dd>
+            <dt class="col-sm-3">Consulta</dt><dd class="col-sm-9" th:text="${m.duracionConsultaMin} + ' minutos'">30 minutos</dd>
+            <dt class="col-sm-3">Contacto</dt>
+            <dd class="col-sm-9" th:text="${(m.email != null ? m.email : '—') + ' · ' + (m.telefono != null ? m.telefono : '—')}">—</dd>
+        </dl>
+    </div></div>
+
+    <!-- Horario semanal -->
+    <div class="card mg-tarjeta mb-3"><div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h6 mb-0">Horario semanal</h2>
+            <span class="small text-secondary" th:if="${mgAdmin}">Deje vacías las horas de los días que no atiende.</span>
+        </div>
+
+        <form method="post" th:action="@{/medicos/{id}/horarios(id=${m.id})}" th:if="${mgAdmin}">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-2">
+                    <thead><tr><th>Día</th><th>Entrada</th><th>Salida</th><th>Descanso desde</th><th>Descanso hasta</th></tr></thead>
+                    <tbody>
+                    <tr th:each="f : ${filas}">
+                        <td><input type="hidden" name="dia" th:value="${f.dia}"><span th:text="${f.nombreDia}">Lunes</span></td>
+                        <td><input type="time" class="form-control form-control-sm" name="inicio" th:value="${f.inicio}" aria-label="Entrada"></td>
+                        <td><input type="time" class="form-control form-control-sm" name="fin" th:value="${f.fin}" aria-label="Salida"></td>
+                        <td><input type="time" class="form-control form-control-sm" name="descansoInicio" th:value="${f.descansoInicio}" aria-label="Inicio del descanso"></td>
+                        <td><input type="time" class="form-control form-control-sm" name="descansoFin" th:value="${f.descansoFin}" aria-label="Fin del descanso"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="small text-secondary">Una fila vacía por día permite agregar un segundo turno. No se puede dejar fuera una cita ya reservada.</span>
+                <button type="submit" class="btn btn-primary btn-sm">Guardar horario</button>
+            </div>
+        </form>
+
+        <div class="table-responsive" th:unless="${mgAdmin}">
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Día</th><th>Horario</th><th>Descanso</th></tr></thead>
+                <tbody>
+                <tr th:each="f : ${filas}" th:if="${f.inicio != ''}">
+                    <td th:text="${f.nombreDia}">Lunes</td>
+                    <td th:text="${f.inicio + ' – ' + f.fin}">08:00 – 17:00</td>
+                    <td th:text="${f.descansoInicio != ''} ? (${f.descansoInicio} + ' – ' + ${f.descansoFin}) : '—'">—</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(horarios)}"><td colspan="3" class="text-center text-secondary py-3">Sin horario definido.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div></div>
+
+    <!-- Bloqueos -->
+    <div class="card mg-tarjeta"><div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h2 class="h6 mb-0">Bloqueos de agenda</h2>
+            <a class="btn btn-outline-primary btn-sm" th:href="@{/bloqueos}">Gestionar bloqueos</a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Desde</th><th>Hasta</th><th>Tipo</th><th>Motivo</th><th>Estado</th></tr></thead>
+                <tbody>
+                <tr th:each="b : ${bloqueos.contenido}">
+                    <td th:text="${@fmt.fechaHora(b.inicio)}">fecha</td>
+                    <td th:text="${@fmt.fechaHora(b.fin)}">fecha</td>
+                    <td th:text="${@fmt.texto(b.tipo)}">Tipo</td>
+                    <td th:text="${b.motivo != null} ? ${b.motivo} : '—'">—</td>
+                    <td th:text="${@fmt.texto(b.estado)}">Estado</td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(bloqueos.contenido)}"><td colspan="5" class="text-center text-secondary py-3">Sin bloqueos.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div></div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/medigest.js}"></script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Bloqueos')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('bloqueos')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">Bloqueos de agenda</h1>
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#nuevoBloqueo" th:if="${mgAdmin or mgMedico}"
+                th:text="${mgAdmin} ? 'Nuevo bloqueo' : 'Solicitar ausencia'">Nuevo bloqueo</button>
+    </div>
+
+    <div class="collapse mb-3" id="nuevoBloqueo" th:if="${mgAdmin or mgMedico}">
+        <form class="card mg-tarjeta" method="post" th:action="@{/bloqueos}">
+            <div class="card-body row g-3">
+                <div class="col-md-6" th:if="${mgAdmin}">
+                    <label class="form-label" for="medicoId">Médico</label>
+                    <select class="form-select" id="medicoId" name="medicoId">
+                        <option value="">— ninguno (bloquear un consultorio) —</option>
+                        <option th:each="m : ${medicos}" th:value="${m.id}" th:text="${m.apellidos + ', ' + m.nombres}"
+                                th:selected="${@fmt.valor(mgForm, 'medicoId', null) == m.id.toString()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-6" th:if="${mgAdmin}">
+                    <label class="form-label" for="consultorioId">Consultorio</label>
+                    <select class="form-select" id="consultorioId" name="consultorioId">
+                        <option value="">— ninguno (bloquear un médico) —</option>
+                        <option th:each="c : ${consultorios}" th:value="${c.id}" th:text="${c.codigo}"
+                                th:selected="${@fmt.valor(mgForm, 'consultorioId', null) == c.id.toString()}"></option>
+                    </select>
+                    <div class="form-text">Elija solo uno: un médico o un consultorio.</div>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="tipo">Tipo</label>
+                    <select class="form-select" id="tipo" name="tipo" required>
+                        <option th:each="t : ${tipos}" th:value="${t}" th:text="${@fmt.texto(t)}"
+                                th:selected="${@fmt.valor(mgForm, 'tipo', null) == t.name()}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="inicio">Desde</label>
+                    <input type="datetime-local" class="form-control" id="inicio" name="inicio" required th:value="${@fmt.valor(mgForm, 'inicio', null)}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="fin">Hasta</label>
+                    <input type="datetime-local" class="form-control" id="fin" name="fin" required th:value="${@fmt.valor(mgForm, 'fin', null)}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="motivo">Motivo</label>
+                    <input class="form-control" id="motivo" name="motivo" maxlength="200" th:value="${@fmt.valor(mgForm, 'motivo', null)}">
+                </div>
+                <div class="col-12 text-end"><button type="submit" class="btn btn-primary">Registrar</button></div>
+            </div>
+        </form>
+    </div>
+
+    <form class="mb-3 d-flex gap-2 align-items-center" method="get" th:action="@{/bloqueos}">
+        <label class="small text-secondary" for="fEstado">Estado</label>
+        <select class="form-select form-select-sm w-auto" id="fEstado" name="estado">
+            <option value="">Todos</option>
+            <option th:each="e : ${estados}" th:value="${e}" th:text="${@fmt.texto(e)}" th:selected="${e == fEstado}"></option>
+        </select>
+        <button class="btn btn-outline-primary btn-sm" type="submit">Filtrar</button>
+    </form>
+
+    <div class="card mg-tarjeta">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Objetivo</th><th>Desde</th><th>Hasta</th><th>Tipo</th><th>Motivo</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="b : ${pagina.contenido}">
+                    <td th:text="${b.medico != null} ? ${b.medico} : ('Consultorio ' + ${b.consultorio})">Objetivo</td>
+                    <td th:text="${@fmt.fechaHora(b.inicio)}">fecha</td>
+                    <td th:text="${@fmt.fechaHora(b.fin)}">fecha</td>
+                    <td th:text="${@fmt.texto(b.tipo)}">Tipo</td>
+                    <td th:text="${b.motivo != null} ? ${b.motivo} : '—'">—</td>
+                    <td><span class="badge" th:text="${@fmt.texto(b.estado)}"
+                              th:classappend="${b.estado.name() == 'APROBADO'} ? 'text-bg-success' : (${b.estado.name() == 'SOLICITADO'} ? 'text-bg-warning' : 'text-bg-secondary')">Estado</span></td>
+                    <td class="text-end text-nowrap">
+                        <form class="d-inline" method="post" th:action="@{/bloqueos/{id}/aprobar(id=${b.id})}" th:if="${mgAdmin and b.estado.name() == 'SOLICITADO'}">
+                            <button class="btn btn-success btn-sm" type="submit">Aprobar</button></form>
+                        <form class="d-inline" method="post" th:action="@{/bloqueos/{id}/rechazar(id=${b.id})}" th:if="${mgAdmin and b.estado.name() == 'SOLICITADO'}">
+                            <button class="btn btn-outline-secondary btn-sm" type="submit">Rechazar</button></form>
+                        <form class="d-inline" method="post" th:action="@{/bloqueos/{id}/eliminar(id=${b.id})}" th:if="${mgAdmin or mgMedico}"
+                              data-confirmar="¿Eliminar este bloqueo?">
+                            <button class="btn btn-outline-danger btn-sm" type="submit">Eliminar</button></form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(pagina.contenido)}"><td colspan="7" class="text-center text-secondary py-4">No hay bloqueos.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center" th:if="${pagina.totalPaginas > 1}">
+            <span class="small text-secondary" th:text="'Página ' + ${pagina.pagina + 1} + ' de ' + ${pagina.totalPaginas}"></span>
+            <div class="btn-group">
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina == 0} ? 'disabled'" th:href="@{/bloqueos(estado=${fEstado},pagina=${pagina.pagina - 1})}">Anterior</a>
+                <a class="btn btn-outline-secondary btn-sm" th:classappend="${pagina.pagina + 1 >= pagina.totalPaginas} ? 'disabled'" th:href="@{/bloqueos(estado=${fEstado},pagina=${pagina.pagina + 1})}">Siguiente</a>
+            </div>
+        </div>
+    </div>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/medigest.js}"></script>
+</body>
+</html>

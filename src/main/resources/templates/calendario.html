@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Calendario')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('calendario')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3">
+    <h1 class="h4 mb-3" th:text="${mgPaciente} ? 'Mi calendario' : (${mgMedico} ? 'Calendario de mi agenda' : 'Calendario de citas')">Calendario</h1>
+    <div class="d-flex flex-wrap gap-2 small mb-3">
+        <span class="badge text-bg-warning">Pendiente</span><span class="badge text-bg-primary">Confirmada</span>
+        <span class="badge text-bg-info">En espera</span><span class="badge text-bg-dark">En atención</span>
+        <span class="badge text-bg-success">Atendida</span><span class="badge text-bg-danger">Cancelada</span>
+        <span class="badge text-bg-secondary">No asistió</span>
+    </div>
+    <div id="calendario" th:data-url="@{/app/datos/eventos}"></div>
+</main>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/locales/es.global.min.js"></script>
+<script th:src="@{/js/medigest.js}"></script>
+<script th:src="@{/js/calendario.js}"></script>
+</body>
+</html>

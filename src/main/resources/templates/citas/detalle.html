@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Detalle de cita')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('citas')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3" style="max-width: 960px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h4 mb-0">Cita <span th:text="${c.codigoReserva}">MG-XXXX</span></h1>
+        <a class="btn btn-outline-secondary btn-sm" th:href="@{/citas}">Volver a citas</a>
+    </div>
+
+    <div class="card mg-tarjeta mb-3">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <div class="fs-5 fw-semibold" th:text="${@fmt.fechaHora(c.inicio)} + ' – ' + ${@fmt.hora(c.fin)}">fecha</div>
+                    <div class="text-secondary" th:text="${c.especialidad}">Especialidad</div>
+                </div>
+                <span class="badge fs-6" th:classappend="${@fmt.claseEstado(c.estado)}" th:text="${@fmt.estado(c.estado)}">Estado</span>
+            </div>
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Paciente</dt><dd class="col-sm-9" th:text="${c.paciente}">Paciente</dd>
+                <dt class="col-sm-3">Médico</dt><dd class="col-sm-9" th:text="${c.medico}">Médico</dd>
+                <dt class="col-sm-3">Consultorio</dt><dd class="col-sm-9" th:text="${c.consultorio}">Consultorio</dd>
+                <dt class="col-sm-3">Motivo</dt><dd class="col-sm-9" th:text="${c.motivo != null} ? ${c.motivo} : '—'">Motivo</dd>
+                <dt class="col-sm-3" th:if="${c.motivoCancelacion != null}">Motivo de cancelación</dt>
+                <dd class="col-sm-9" th:if="${c.motivoCancelacion != null}" th:text="${c.motivoCancelacion}">Motivo</dd>
+                <dt class="col-sm-3">Registrada</dt><dd class="col-sm-9" th:text="${@fmt.fechaHora(c.creadoEn)}">fecha</dd>
+            </dl>
+        </div>
+        <div class="card-footer bg-white d-flex flex-wrap gap-2 p-3"
+             th:if="${!#lists.isEmpty(c.accionesPermitidas)}">
+            <form th:action="@{/citas/{id}/confirmar(id=${c.id})}" method="post" th:if="${@fmt.puede(c.accionesPermitidas, 'CONFIRMAR')}">
+                <button class="btn btn-primary btn-sm" type="submit">Confirmar</button>
+            </form>
+            <form th:action="@{/citas/{id}/asistencia(id=${c.id})}" method="post" th:if="${@fmt.puede(c.accionesPermitidas, 'MARCAR_LLEGADA')}">
+                <input type="hidden" name="accion" value="LLEGADA">
+                <button class="btn btn-info btn-sm" type="submit">Registrar llegada</button>
+            </form>
+            <form th:action="@{/citas/{id}/asistencia(id=${c.id})}" method="post" th:if="${@fmt.puede(c.accionesPermitidas, 'INICIAR_ATENCION')}">
+                <input type="hidden" name="accion" value="INICIAR">
+                <button class="btn btn-dark btn-sm" type="submit">Iniciar atención</button>
+            </form>
+            <form th:action="@{/citas/{id}/asistencia(id=${c.id})}" method="post" th:if="${@fmt.puede(c.accionesPermitidas, 'FINALIZAR_ATENCION')}">
+                <input type="hidden" name="accion" value="FINALIZAR">
+                <button class="btn btn-success btn-sm" type="submit">Finalizar atención</button>
+            </form>
+            <form th:action="@{/citas/{id}/asistencia(id=${c.id})}" method="post" th:if="${@fmt.puede(c.accionesPermitidas, 'MARCAR_NO_ASISTIO')}"
+                  data-confirmar="¿Marcar que el paciente no asistió?">
+                <input type="hidden" name="accion" value="NO_ASISTIO">
+                <button class="btn btn-outline-secondary btn-sm" type="submit">No asistió</button>
+            </form>
+            <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modalReprogramar"
+                    th:if="${@fmt.puede(c.accionesPermitidas, 'REPROGRAMAR')}">Reprogramar</button>
+            <button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modalCancelar"
+                    th:if="${@fmt.puede(c.accionesPermitidas, 'CANCELAR')}">Cancelar cita</button>
+        </div>
+    </div>
+
+    <div class="card mg-tarjeta">
+        <div class="card-body">
+            <h2 class="h6">Historial</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead><tr><th>Fecha</th><th>Evento</th><th>Cambio</th><th>Detalle</th><th>Usuario</th></tr></thead>
+                    <tbody>
+                    <tr th:each="h : ${historial}">
+                        <td th:text="${@fmt.fechaHora(h.fecha)}">fecha</td>
+                        <td th:text="${@fmt.texto(h.tipoEvento)}">Evento</td>
+                        <td>
+                            <span th:if="${h.estadoNuevo != null}"
+                                  th:text="${(h.estadoAnterior != null ? @fmt.estado(h.estadoAnterior) + ' → ' : '') + @fmt.estado(h.estadoNuevo)}"></span>
+                            <span th:if="${h.inicioAnterior != null and h.inicioNuevo != null}" class="d-block small text-secondary"
+                                  th:text="${@fmt.fechaHora(h.inicioAnterior)} + ' → ' + ${@fmt.fechaHora(h.inicioNuevo)}"></span>
+                        </td>
+                        <td th:text="${h.motivo != null} ? ${h.motivo} : '—'">—</td>
+                        <td th:text="${h.usuario != null} ? ${h.usuario} : 'Sistema'">Usuario</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Cancelar -->
+<div class="modal fade" id="modalCancelar" tabindex="-1" aria-labelledby="tituloCancelar" aria-hidden="true"
+     th:if="${@fmt.puede(c.accionesPermitidas, 'CANCELAR')}">
+    <div class="modal-dialog"><form class="modal-content" method="post" th:action="@{/citas/{id}/cancelar(id=${c.id})}">
+        <div class="modal-header"><h2 class="modal-title h5" id="tituloCancelar">Cancelar cita</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <div class="modal-body">
+            <p class="text-secondary">El horario quedará libre y se ofrecerá a la lista de espera.</p>
+            <label class="form-label" for="motivoCancelar">Motivo de la cancelación</label>
+            <textarea class="form-control" id="motivoCancelar" name="motivo" rows="3" maxlength="300" required></textarea>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Volver</button>
+            <button type="submit" class="btn btn-danger">Cancelar cita</button>
+        </div>
+    </form></div>
+</div>
+
+<!-- Reprogramar -->
+<div class="modal fade" id="modalReprogramar" tabindex="-1" aria-labelledby="tituloReprogramar" aria-hidden="true"
+     th:if="${@fmt.puede(c.accionesPermitidas, 'REPROGRAMAR')}"
+     th:data-base="@{/app/datos}" th:data-medico-id="${c.medicoId}">
+    <div class="modal-dialog modal-lg"><form class="modal-content" method="post" th:action="@{/citas/{id}/reprogramar(id=${c.id})}">
+        <div class="modal-header"><h2 class="modal-title h5" id="tituloReprogramar">Reprogramar cita</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <div class="modal-body">
+            <input type="hidden" name="nuevoInicio" id="nuevoInicio">
+            <div id="horariosReprogramar"></div>
+            <div class="alert alert-primary mt-3 py-2" id="resumenReprogramar" role="status"></div>
+            <label class="form-label mt-2" for="motivoReprogramar">Motivo del cambio</label>
+            <textarea class="form-control" id="motivoReprogramar" name="motivo" rows="2" maxlength="300" required></textarea>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Volver</button>
+            <button type="submit" class="btn btn-primary" id="btnReprogramar" disabled>Reprogramar</button>
+        </div>
+    </form></div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+<script th:src="@{/js/medigest.js}"></script>
+<script th:src="@{/js/detalle-cita.js}"></script>
+</body>
+</html>

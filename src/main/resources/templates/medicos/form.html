@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Médico')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar('medicos')}"></nav>
+<div th:replace="~{fragments/layout :: mensajes}"></div>
+
+<main class="container-xl py-3" style="max-width: 860px;">
+    <h1 class="h4 mb-3" th:text="${titulo}">Médico</h1>
+    <form class="card mg-tarjeta" method="post" th:action="@{${accion}}">
+        <div class="card-body p-4 row g-3">
+            <div class="col-md-6">
+                <label class="form-label" for="nombres">Nombres</label>
+                <input class="form-control" id="nombres" name="nombres" maxlength="100" required th:value="${@fmt.valor(mgForm, 'nombres', m?.nombres)}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="apellidos">Apellidos</label>
+                <input class="form-control" id="apellidos" name="apellidos" maxlength="100" required th:value="${@fmt.valor(mgForm, 'apellidos', m?.apellidos)}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="numeroColegiatura">N.º de colegiatura</label>
+                <input class="form-control" id="numeroColegiatura" name="numeroColegiatura" maxlength="20" required th:value="${@fmt.valor(mgForm, 'numeroColegiatura', m?.numeroColegiatura)}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="email">Correo de contacto</label>
+                <input type="email" class="form-control" id="email" name="email" maxlength="150" th:value="${@fmt.valor(mgForm, 'email', m?.email)}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="telefono">Teléfono</label>
+                <input class="form-control" id="telefono" name="telefono" maxlength="20" th:value="${@fmt.valor(mgForm, 'telefono', m?.telefono)}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="consultorioId">Consultorio</label>
+                <select class="form-select" id="consultorioId" name="consultorioId" required>
+                    <option value="">Seleccione…</option>
+                    <option th:each="c : ${consultorios}" th:value="${c.id}" th:text="${c.codigo + (c.ubicacion != null ? ' · ' + c.ubicacion : '')}"
+                            th:selected="${@fmt.valor(mgForm, 'consultorioId', m?.consultorio?.id) == c.id.toString()}"></option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="duracionConsultaMin">Duración de cada consulta (minutos)</label>
+                <input type="number" class="form-control" id="duracionConsultaMin" name="duracionConsultaMin" min="5" max="240" step="5" required
+                       th:value="${@fmt.valor(mgForm, 'duracionConsultaMin', m != null ? m.duracionConsultaMin : 30)}">
+            </div>
+            <div class="col-12">
+                <div class="form-label">Especialidades</div>
+                <div class="row g-2">
+                    <div class="col-sm-6 col-md-4" th:each="e : ${especialidades}">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="especialidadIds" th:id="'esp' + ${e.id}" th:value="${e.id}"
+                                   th:checked="${@fmt.marcado(mgForm, 'especialidadIds', e.id, idsEspecialidad.contains(e.id))}">
+                            <label class="form-check-label" th:for="'esp' + ${e.id}" th:text="${e.nombre}">Especialidad</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12" th:if="${m == null}">
+                <hr>
+                <div class="form-label mb-1">Cuenta de acceso <span class="text-secondary">(opcional)</span></div>
+                <p class="small text-secondary">Si la completa, el médico podrá iniciar sesión y ver su agenda. Se le asigna el rol Médico.</p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="cuentaEmail">Correo de la cuenta</label>
+                        <input type="email" class="form-control" id="cuentaEmail" name="cuentaEmail" maxlength="150" autocomplete="off"
+                               th:value="${@fmt.valor(mgForm, 'cuentaEmail', null)}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="cuentaPassword">Contraseña inicial</label>
+                        <input type="password" class="form-control" id="cuentaPassword" name="cuentaPassword" maxlength="72" autocomplete="new-password">
+                        <div class="form-text">Mínimo 8 caracteres con mayúscula, minúscula, número y símbolo.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-secondary" th:href="${m != null} ? @{/medicos/{id}(id=${m.id})} : @{/medicos}">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </form>
+</main>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>
